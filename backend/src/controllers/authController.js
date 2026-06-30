@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const prisma = require('../utils/prisma');
+const sendEmail = require('../utils/sendEmail');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -90,7 +91,7 @@ const registerUser = async (req, res) => {
       }
     });
 
-    // Create a simulated system notification for email sending
+    // Create system notification log
     await prisma.notification.create({
       data: {
         title: 'Account Verification Code',
@@ -101,7 +102,23 @@ const registerUser = async (req, res) => {
       }
     });
 
-    console.log(`[SIMULATED EMAIL] Verification email sent to ${email}. Code: ${verificationCode}`);
+    // Send actual email using Gmail transporter
+    await sendEmail({
+      to: email,
+      subject: 'Account Verification Code - Gitwe AMC',
+      text: `Welcome ${name}! Your account verification code is: ${verificationCode}. Please enter this code to activate your account.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">Welcome to Gitwe AMC Platform</h2>
+          <p>Hello <strong>${name}</strong>,</p>
+          <p>Your account has been registered. Please use the verification code below to activate your account:</p>
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a; margin: 20px 0;">
+            ${verificationCode}
+          </div>
+          <p style="font-size: 12px; color: #666;">This code is valid for registration. If you did not register for an account, please ignore this email.</p>
+        </div>
+      `
+    });
 
     res.status(201).json({
       message: 'Registration successful. Verification email sent.',
@@ -172,7 +189,7 @@ const forgotPassword = async (req, res) => {
       data: { verificationCode: resetCode }
     });
 
-    // Create a simulated system notification for password reset
+    // Create system notification log
     await prisma.notification.create({
       data: {
         title: 'Password Reset Request',
@@ -183,7 +200,23 @@ const forgotPassword = async (req, res) => {
       }
     });
 
-    console.log(`[SIMULATED EMAIL] Password reset email sent to ${email}. Code: ${resetCode}`);
+    // Send actual email using Gmail transporter
+    await sendEmail({
+      to: email,
+      subject: 'Password Reset Request - Gitwe AMC',
+      text: `Your password reset code is: ${resetCode}. Enter this code to set a new password.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">Password Reset Request</h2>
+          <p>Hello,</p>
+          <p>We received a request to reset your password. Use the verification code below to update your password:</p>
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a; margin: 20px 0;">
+            ${resetCode}
+          </div>
+          <p style="font-size: 12px; color: #666;">If you did not request a password reset, please ignore this email or contact support if you suspect unauthorized access.</p>
+        </div>
+      `
+    });
 
     res.json({
       message: 'Reset instructions sent to your email.',
@@ -262,11 +295,63 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Get all system users directory (scoped by requester role)
+// @route   GET /api/auth/users
+// @access  Private
+const getUsersList = async (req, res) => {
+  try {
+    const { role } = req.query;
+    let whereClause = {};
+
+    if (role) {
+      whereClause.role = role;
+    }
+
+    // Role-based hierarchy scoping
+    if (req.user.role === 'FIELD_SECRETARY') {
+      whereClause.OR = [
+        { fieldId: req.user.fieldId },
+        { localChurch: { district: { fieldId: req.user.fieldId } } }
+      ];
+    } else if (req.user.role === 'PASTOR') {
+      whereClause.OR = [
+        { districtId: req.user.districtId },
+        { localChurch: { districtId: req.user.districtId } }
+      ];
+    } else if (req.user.role === 'ELDER') {
+      whereClause.localChurchId = req.user.localChurchId;
+    }
+
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        unionId: true,
+        fieldId: true,
+        districtId: true,
+        localChurchId: true,
+        isVerified: true,
+        createdAt: true
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { 
   loginUser, 
   registerUser, 
   verifyEmail, 
   forgotPassword, 
   resetPassword, 
-  getUserProfile 
+  getUserProfile,
+  getUsersList
 };

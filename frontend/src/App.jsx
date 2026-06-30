@@ -4,8 +4,19 @@ import { LanguageProvider } from './context';
 import { ErrorBoundary } from './components';
 import { Login, Register, ResetPassword, Dashboard } from './pages';
 
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
+// Helper to determine the dashboard path based on user role
+export const getRoleDashboardPath = (role) => {
+  switch (role) {
+    case 'UNION_ADMIN': return '/dashboard/union-admin';
+    case 'FIELD_SECRETARY': return '/dashboard/field-secretary';
+    case 'PASTOR': return '/dashboard/pastor';
+    case 'ELDER': return '/dashboard/elder';
+    default: return '/login';
+  }
+};
+
+// Protected Route Component with role restriction
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   
   if (loading) return null;
@@ -13,8 +24,19 @@ const ProtectedRoute = ({ children }) => {
   if (!user) {
     return <Navigate to="/login" />;
   }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={getRoleDashboardPath(user.role)} replace />;
+  }
   
   return children;
+};
+
+// Redirect route for the base dashboard path
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" />;
+  return <Navigate to={getRoleDashboardPath(user.role)} replace />;
 };
 
 function App() {
@@ -28,11 +50,43 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               
-              {/* Protected Routes */}
+              {/* Role-Specific Dashboard Routes */}
               <Route 
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
+                    <DashboardRedirect />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/union-admin" 
+                element={
+                  <ProtectedRoute allowedRoles={['UNION_ADMIN']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/field-secretary" 
+                element={
+                  <ProtectedRoute allowedRoles={['FIELD_SECRETARY']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/pastor" 
+                element={
+                  <ProtectedRoute allowedRoles={['PASTOR']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/elder" 
+                element={
+                  <ProtectedRoute allowedRoles={['ELDER']}>
                     <Dashboard />
                   </ProtectedRoute>
                 } 

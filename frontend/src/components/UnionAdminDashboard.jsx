@@ -53,7 +53,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
       }
       if (activeTab === 'users') {
         // We will fetch list of users
-        const { data } = await memberService.getMembers(); // reuse memberController for simple demo
+        const { data } = await authService.getUsers();
         setUsers(data);
       }
       if (activeTab === 'recommendations') {

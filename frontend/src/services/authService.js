@@ -12,7 +12,9 @@ const authService = {
   resetPassword: (email, code, newPassword) =>
     api.post('/auth/reset-password', { email, code, newPassword }),
 
-  getProfile: () => api.get('/auth/profile')
+  getProfile: () => api.get('/auth/profile'),
+
+  getUsers: (params) => api.get('/auth/users', { params })
 };
 
 export default authService;

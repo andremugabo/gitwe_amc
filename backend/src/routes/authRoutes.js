@@ -6,7 +6,8 @@ const {
   verifyEmail, 
   forgotPassword, 
   resetPassword, 
-  getUserProfile 
+  getUserProfile,
+  getUsersList
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -186,5 +187,28 @@ router.post('/reset-password', resetPassword);
  *         description: User not found
  */
 router.get('/profile', protect, getUserProfile);
+
+/**
+ * @swagger
+ * /auth/users:
+ *   get:
+ *     summary: Get all system users directory (scoped based on authorization role)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [UNION_ADMIN, FIELD_SECRETARY, PASTOR, ELDER]
+ *         description: Filter system users by role type
+ *     responses:
+ *       200:
+ *         description: Scoped list of users
+ *       401:
+ *         description: Not authorized
+ */
+router.get('/users', protect, getUsersList);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { trainingService, memberService } from '../services';
+import { trainingService, memberService, authService } from '../services';
 import { 
   Users, 
   BookOpen, 
@@ -48,8 +48,8 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
   const fetchData = async () => {
     try {
       if (activeTab === 'dashboard' || activeTab === 'registrations') {
-        const { data } = await memberService.getMembers(); // Fetch scoped elders (lists members/users)
-        setElders(data.filter(u => u.role === 'ELDER' || !u.role));
+        const { data } = await authService.getUsers({ role: 'ELDER' });
+        setElders(data);
       }
       
       const { data: coursesData } = await trainingService.getCourses();

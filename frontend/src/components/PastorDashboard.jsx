@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { trainingService, memberService } from '../services';
+import { trainingService, memberService, authService } from '../services';
 import { 
   Users, 
   ThumbsUp, 
@@ -32,9 +32,9 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const fetchData = async () => {
     try {
-      const { data: membersData } = await memberService.getMembers();
+      const { data: membersData } = await authService.getUsers({ role: 'ELDER' });
       // Pastor sees elders under their local church / district scope
-      setElders(membersData.filter(m => m.role === 'ELDER' || !m.role));
+      setElders(membersData);
 
       const { data: coursesData } = await trainingService.getCourses();
       setCourses(coursesData);

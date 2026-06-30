@@ -70,6 +70,10 @@ DONATHA_PROJECT/
    PORT=5001
    DATABASE_URL="postgresql://username:password@localhost:5432/gitwe_amc"
    JWT_SECRET="your_secure_jwt_secret_token"
+   
+   # Gmail SMTP Configuration
+   EMAIL_USER="your_gmail_address@gmail.com"
+   EMAIL_PASS="your_gmail_app_password" # 16-character code from App Passwords
    ```
 4. Run migrations and seed the database hierarchy:
    ```bash
