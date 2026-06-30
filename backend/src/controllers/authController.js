@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const prisma = require('../utils/prisma');
 const sendEmail = require('../utils/sendEmail');
+const { getVerificationTemplate, getPasswordResetTemplate } = require('../utils/emailTemplates');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -107,17 +108,7 @@ const registerUser = async (req, res) => {
       to: email,
       subject: 'Account Verification Code - Gitwe AMC',
       text: `Welcome ${name}! Your account verification code is: ${verificationCode}. Please enter this code to activate your account.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">Welcome to Gitwe AMC Platform</h2>
-          <p>Hello <strong>${name}</strong>,</p>
-          <p>Your account has been registered. Please use the verification code below to activate your account:</p>
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a; margin: 20px 0;">
-            ${verificationCode}
-          </div>
-          <p style="font-size: 12px; color: #666;">This code is valid for registration. If you did not register for an account, please ignore this email.</p>
-        </div>
-      `
+      html: getVerificationTemplate(name, verificationCode)
     });
 
     res.status(201).json({
@@ -205,17 +196,7 @@ const forgotPassword = async (req, res) => {
       to: email,
       subject: 'Password Reset Request - Gitwe AMC',
       text: `Your password reset code is: ${resetCode}. Enter this code to set a new password.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">Password Reset Request</h2>
-          <p>Hello,</p>
-          <p>We received a request to reset your password. Use the verification code below to update your password:</p>
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a; margin: 20px 0;">
-            ${resetCode}
-          </div>
-          <p style="font-size: 12px; color: #666;">If you did not request a password reset, please ignore this email or contact support if you suspect unauthorized access.</p>
-        </div>
-      `
+      html: getPasswordResetTemplate(user.name || 'User', resetCode)
     });
 
     res.json({

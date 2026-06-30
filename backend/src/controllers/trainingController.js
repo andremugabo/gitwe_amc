@@ -1,4 +1,11 @@
 const prisma = require('../utils/prisma');
+const sendEmail = require('../utils/sendEmail');
+const { 
+  getCourseScheduledTemplate, 
+  getElderEnrolledTemplate, 
+  getRecommendationTemplate, 
+  getCertificateIssuedTemplate 
+} = require('../utils/emailTemplates');
 
 // Helper to filter elders based on role scoping
 const getScopedElderIds = async (user) => {
@@ -88,6 +95,18 @@ const createCourse = async (req, res) => {
             recipientId: u.id
           }
         })
+      )
+    );
+
+    // Send actual emails system-wide to Pastors & Field Secretaries
+    await Promise.all(
+      targetUsers.map(u => 
+        sendEmail({
+          to: u.email,
+          subject: `New Training Scheduled: ${title}`,
+          text: `A new course "${title}" has been scheduled starting on ${startDate || 'TBD'}.`,
+          html: getCourseScheduledTemplate(u.name, title, startDate, location, duration)
+        }).catch(err => console.error('Failed to send course scheduled email to', u.email, err.message))
       )
     );
 
@@ -211,6 +230,18 @@ const registerElder = async (req, res) => {
       }
     });
 
+    // Send actual email notification to the elder
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    const elder = await prisma.user.findUnique({ where: { id: elderId } });
+    if (elder && elder.email && course) {
+      await sendEmail({
+        to: elder.email,
+        subject: `Enrolled in Training Course: ${course.title}`,
+        text: `You have been registered for the course "${course.title}".`,
+        html: getElderEnrolledTemplate(elder.name, course.title, course.startDate, course.location)
+      }).catch(err => console.error('Failed to send elder enrollment email:', err.message));
+    }
+
     // Audit log
     await prisma.activity.create({
       data: {
@@ -274,6 +305,21 @@ const recommendElder = async (req, res) => {
         })
       )
     );
+
+    // Send actual email notifications to Field Secretaries and Union Admins
+    const elder = await prisma.user.findUnique({ where: { id: elderId } });
+    if (elder) {
+      await Promise.all(
+        notifyTargets.map(t =>
+          sendEmail({
+            to: t.email,
+            subject: 'Training Recommendation Submitted',
+            text: `Pastor ${req.user.name} recommended Elder ${elder.name} for the program: "${courseName}".`,
+            html: getRecommendationTemplate(t.name, req.user.name, elder.name, courseName, notes)
+          }).catch(err => console.error('Failed to send recommendation email to', t.email, err.message))
+        )
+      );
+    }
 
     res.status(201).json(recommendation);
   } catch (error) {
@@ -395,6 +441,18 @@ const issueCertificate = async (req, res) => {
         recipientId: elderId
       }
     });
+
+    // Send actual email certificate notification to the elder
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    const elder = await prisma.user.findUnique({ where: { id: elderId } });
+    if (elder && elder.email && course && status !== 'FAILED') {
+      await sendEmail({
+        to: elder.email,
+        subject: `Digital Certificate Issued: ${course.title}`,
+        text: `Congratulations! Your certificate for "${course.title}" has been issued.`,
+        html: getCertificateIssuedTemplate(elder.name, course.title, qrCodeValue)
+      }).catch(err => console.error('Failed to send certificate email:', err.message));
+    }
 
     res.json(enrollment);
   } catch (error) {
