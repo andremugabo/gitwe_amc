@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import { trainingService } from '../services';
 import { 
   BookOpen, 
   Award, 
-  Calendar, 
-  Download,
-  AlertCircle,
-  CheckCircle2,
+  Download, 
   CheckSquare,
-  Users,
-  Bell,
   Edit
 } from 'lucide-react';
 
@@ -44,7 +39,7 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
       }
 
       // Materials loading
-      const { data: coursesData } = await api.get('/training');
+      const { data: coursesData } = await trainingService.getCourses();
       const allMaterials = [];
       coursesData.forEach(c => {
         // Mock materials lists if empty
@@ -58,7 +53,7 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
       setMaterials(allMaterials);
 
       if (activeTab === 'notifications') {
-        const { data: nots } = await api.get('/training/notifications');
+        const { data: nots } = await trainingService.getNotifications();
         setNotifications(nots);
       }
     } catch (err) {
@@ -249,7 +244,7 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
-      {/* Tab: Notifications */}
+      {/* Tab: My Notifications */}
       {activeTab === 'notifications' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
           <div>

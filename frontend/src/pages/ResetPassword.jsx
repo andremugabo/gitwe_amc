@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
-import api from '../api/axios';
-import { Church, Mail, Key, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '../context';
+import { authService } from '../services';
+import { Key, ShieldCheck } from 'lucide-react';
+import { Input, Button } from '../components/ui';
 
 const ResetPassword = () => {
   const [step, setStep] = useState(1); // 1 = Request, 2 = Verify & Reset
@@ -23,7 +24,7 @@ const ResetPassword = () => {
     setMessage('');
 
     try {
-      const { data } = await api.post('/auth/forgot-password', { email });
+      const { data } = await authService.forgotPassword(email);
       setMessage(data.message);
       setStep(2);
     } catch (err) {
@@ -39,7 +40,7 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      const { data } = await api.post('/auth/reset-password', { email, code, newPassword });
+      const { data } = await authService.resetPassword(email, code, newPassword);
       setMessage(data.message);
       setStep(3); // Success state
     } catch (err) {
@@ -79,30 +80,22 @@ const ResetPassword = () => {
 
           {step === 1 && (
             <form onSubmit={handleRequest} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-600">{t('email')}</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                    <Mail size={16} />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
-                    placeholder="name@example.com"
-                  />
-                </div>
-              </div>
+              <Input
+                label={t('email')}
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+              />
 
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-75"
+                loading={loading}
+                className="w-full"
               >
-                {loading ? t('loading') : t('sendCode')}
-              </button>
+                {t('sendCode')}
+              </Button>
 
               <div className="text-center text-xs text-slate-500 mt-4">
                 {t('backToLogin')} <Link to="/login" className="text-blue-600 font-semibold hover:underline">{t('signIn')}</Link>
@@ -116,38 +109,33 @@ const ResetPassword = () => {
                 <strong>Check logs:</strong> Get the password reset code from the developer console or backend logs.
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-600">{t('verificationCode')}</label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="000000"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm tracking-widest text-center font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                />
-              </div>
+              <Input
+                label={t('verificationCode')}
+                type="text"
+                required
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="000000"
+                className="text-center tracking-widest font-bold"
+              />
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-600">{t('newPassword')}</label>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                />
-              </div>
+              <Input
+                label={t('newPassword')}
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+              />
 
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-75"
+                loading={loading}
+                className="w-full"
               >
-                {loading ? t('loading') : t('resetPasswordBtn')}
-              </button>
+                {t('resetPasswordBtn')}
+              </Button>
             </form>
           )}
 
@@ -161,7 +149,7 @@ const ResetPassword = () => {
               
               <button
                 onClick={() => navigate('/login')}
-                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all"
+                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all animate-bounce"
               >
                 {t('signIn')}
               </button>

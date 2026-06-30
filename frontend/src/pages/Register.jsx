@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
-import api from '../api/axios';
-import { Church, Mail, Lock, User, Phone, CheckCircle, Shield } from 'lucide-react';
+import { useLanguage } from '../context';
+import { authService, hierarchyService } from '../services';
+import { Church, CheckCircle } from 'lucide-react';
 
 const Register = () => {
   const [step, setStep] = useState(1); // 1 = Details, 2 = Verify Code
@@ -36,7 +36,7 @@ const Register = () => {
   useEffect(() => {
     const fetchHierarchy = async () => {
       try {
-        const { data } = await api.get('/hierarchy');
+        const { data } = await hierarchyService.getHierarchy();
         setHierarchy(data);
       } catch (err) {
         console.error('Error fetching hierarchy data:', err);
@@ -89,7 +89,7 @@ const Register = () => {
     }
 
     try {
-      const { data } = await api.post('/auth/register', formData);
+      const { data } = await authService.register(formData);
       setVerifiedEmail(data.email);
       setStep(2);
     } catch (err) {
@@ -105,7 +105,7 @@ const Register = () => {
     setError('');
 
     try {
-      await api.post('/auth/verify', { email: verifiedEmail, code: otpCode });
+      await authService.verifyEmail(verifiedEmail, otpCode);
       setStep(3); // Success Screen
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid verification code');

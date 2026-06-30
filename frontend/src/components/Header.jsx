@@ -1,5 +1,4 @@
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useAuth, useLanguage } from '../context';
 import { MapPin, Shield, Globe } from 'lucide-react';
 
 const Header = ({ title }) => {

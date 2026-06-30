@@ -1,16 +1,65 @@
-# React + Vite
+# Gitwe AMC Client Portal (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React single page application for the Gitwe Ministerial Centre Digital Platform, built using Vite.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Architecture & Core Features
 
-## React Compiler
+### 1. Barrel Pattern Exports
+All major folders export their contents via `index.js` files. Imports are grouped and readable:
+```javascript
+import { useAuth, useLanguage } from '../context';
+import { Button, Input } from '../components/ui';
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Services API Abstraction
+Axios calls are fully decoupled from React components. All backend requests are channeled through services under `src/services/`:
+- `authService.js` — Handles logging, registration, and email validations.
+- `trainingService.js` — Schedules courses, registers elders, logs attendance, and recommends members.
+- `memberService.js` — Manages church member records.
+- `hierarchyService.js` — Pulls Union/Field/District/Church geography.
+- `documentService.js` — Handles archives and PDF certificate downloads.
 
-## Expanding the ESLint configuration
+### 3. Translation Support (i18n)
+A custom context provider (`LanguageContext.jsx`) implements three localized language libraries:
+- **English (EN)**
+- **Kinyarwanda (KIN)**
+- **Français (FR)**
+All views, input fields, badges, and dashboard headings adapt instantly when the language is changed. Selection is persisted in `localStorage`.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 4. Resilient Error Handling
+- **Axios interceptor**: Catches `401 Unauthorized` errors (session expiry) globally to clear client user data and redirect to `/login`.
+- **Global ErrorBoundary**: Catches render crashes in components and displays a polished rollback warning with an app-reload function.
+
+---
+
+## 📂 Directories
+
+```text
+src/
+├── api/          # Axios instance & interceptors
+├── assets/       # Global CSS styles and images
+├── components/   # Scoped dashboard modules (Elder, Pastor, Secretary, Union)
+│   └── ui/       # Reusable primitives (Buttons, Inputs, Modals, Status Badges)
+├── context/      # Authorization and translation states
+├── pages/        # Main pages (Login, Register, Dashboard, ResetPassword)
+└── services/     # Decoupled server requests logic
+```
+
+---
+
+## 💻 Running the App
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Build production assets:
+   ```bash
+   npm run build
+   ```
+3. Run local dev server:
+   ```bash
+   npm run dev
+   ```

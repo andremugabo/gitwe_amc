@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useAuth, useLanguage } from '../context';
 import { useNavigate, Link } from 'react-router-dom';
-import { Church, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
+import { Button, Input } from '../components/ui';
+import { Church, Lock, Mail, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -52,51 +52,33 @@ const Login = () => {
               </div>
             )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 ml-1">{t('email')}</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                  <Mail size={18} />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
-                  placeholder="admin@gitweamc.org"
-                />
-              </div>
-            </div>
+            <Input
+              label={t('email')}
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              icon={Mail}
+              placeholder="admin@gitweamc.org"
+            />
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 ml-1">{t('password')}</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                  <Lock size={18} />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+            <Input
+              label={t('password')}
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              icon={Lock}
+              placeholder="••••••••"
+            />
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 church-gradient text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-900/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              loading={loading}
+              className="w-full py-3"
             >
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                t('signIn')
-              )}
-            </button>
+              {t('signIn')}
+            </Button>
           </form>
 
           <div className="flex justify-between items-center text-xs text-slate-500 mt-4 px-1">

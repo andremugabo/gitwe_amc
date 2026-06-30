@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import api from '../api/axios';
+import { useLanguage } from '../context';
+import { trainingService, memberService, hierarchyService, authService } from '../services';
 import { 
   Users, 
   BookOpen, 
@@ -48,20 +48,20 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const fetchData = async () => {
     try {
       if (activeTab === 'dashboard' || activeTab === 'courses') {
-        const { data } = await api.get('/training');
+        const { data } = await trainingService.getCourses();
         setCourses(data);
       }
       if (activeTab === 'users') {
         // We will fetch list of users
-        const { data } = await api.get('/members'); // reuse memberController for simple demo
+        const { data } = await memberService.getMembers(); // reuse memberController for simple demo
         setUsers(data);
       }
       if (activeTab === 'recommendations') {
-        const { data } = await api.get('/training/recommend/list');
+        const { data } = await trainingService.getRecommendations();
         setRecommendations(data);
       }
       if (activeTab === 'notifications') {
-        const { data } = await api.get('/training/notifications');
+        const { data } = await trainingService.getNotifications();
         setNotifications(data);
       }
     } catch (err) {
@@ -71,7 +71,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const fetchHierarchy = async () => {
     try {
-      const { data } = await api.get('/hierarchy');
+      const { data } = await hierarchyService.getHierarchy();
       setHierarchy(data);
     } catch (err) {
       console.error('Error fetching hierarchy:', err);
@@ -84,7 +84,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     setError('');
     setMessage('');
     try {
-      await api.post('/training', courseForm);
+      await trainingService.createCourse(courseForm);
       setMessage('Training program scheduled and system notifications sent successfully!');
       setCourseForm({ title: '', description: '', topics: '', location: '', duration: '', startDate: '', endDate: '' });
       setShowCourseForm(false);
@@ -103,7 +103,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     setError('');
     setMessage('');
     try {
-      await api.post('/auth/register', { ...userForm, isVerified: true });
+      await authService.register({ ...userForm, isVerified: true });
       setMessage('User account created successfully!');
       setUserForm({
         name: '', email: '', password: '', role: 'FIELD_SECRETARY', phone: '',
@@ -356,7 +356,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                   <button 
                     onClick={async () => {
                       try {
-                        await api.post('/training/register', { courseId: courses[0]?.id || '', elderId: r.elderId });
+                        await trainingService.registerElder({ courseId: courses[0]?.id || '', elderId: r.elderId });
                         setMessage('Elder successfully enrolled from recommendation!');
                         fetchData();
                       } catch (err) {

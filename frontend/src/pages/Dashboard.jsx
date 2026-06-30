@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import UnionAdminDashboard from '../components/UnionAdminDashboard';
-import FieldSecretaryDashboard from '../components/FieldSecretaryDashboard';
-import PastorDashboard from '../components/PastorDashboard';
-import ElderDashboard from '../components/ElderDashboard';
-import api from '../api/axios';
+import { useAuth } from '../context';
+import { Sidebar, Header, UnionAdminDashboard, FieldSecretaryDashboard, PastorDashboard, ElderDashboard } from '../components';
+import { dashboardService } from '../services';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -19,7 +14,7 @@ const Dashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/dashboard/stats');
+      const { data } = await dashboardService.getStats();
       setStats(data);
     } catch (err) {
       setError('Failed to fetch dashboard metrics');

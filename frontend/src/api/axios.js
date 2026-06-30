@@ -18,4 +18,20 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to handle token expiry / unauthorized requests
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear storage
+      localStorage.removeItem('userInfo');
+      // Redirect to login if not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

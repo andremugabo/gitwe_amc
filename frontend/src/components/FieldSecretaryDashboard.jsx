@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import { trainingService, memberService } from '../services';
 import { 
   Users, 
   BookOpen, 
@@ -10,8 +10,7 @@ import {
   Check, 
   Download,
   AlertCircle,
-  CheckCircle2,
-  Bell
+  CheckCircle2
 } from 'lucide-react';
 
 const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
@@ -49,15 +48,15 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
   const fetchData = async () => {
     try {
       if (activeTab === 'dashboard' || activeTab === 'registrations') {
-        const { data } = await api.get('/members'); // Fetch scoped elders (lists members/users)
+        const { data } = await memberService.getMembers(); // Fetch scoped elders (lists members/users)
         setElders(data.filter(u => u.role === 'ELDER' || !u.role));
       }
       
-      const { data: coursesData } = await api.get('/training');
+      const { data: coursesData } = await trainingService.getCourses();
       setCourses(coursesData);
 
       if (activeTab === 'notifications') {
-        const { data } = await api.get('/training/notifications');
+        const { data } = await trainingService.getNotifications();
         setNotifications(data);
       }
     } catch (err) {
@@ -71,7 +70,7 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
     setError('');
     setMessage('');
     try {
-      await api.post('/training/register', registerForm);
+      await trainingService.registerElder(registerForm);
       setMessage('Elder registered for course successfully!');
       setRegisterForm({ courseId: '', elderId: '' });
       setShowRegisterForm(false);
@@ -88,13 +87,13 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post(`/training/${activeCourse.id}/session`, sessionForm);
+      await trainingService.createSession(activeCourse.id, sessionForm);
       setMessage('Class session created!');
       setSessionForm({ date: '', topic: '' });
       setShowSessionForm(false);
       
       // Refresh course view
-      const { data } = await api.get(`/training/${activeCourse.id}`);
+      const { data } = await trainingService.getCourseById(activeCourse.id);
       setActiveCourse(data);
       setSessions(data.sessions);
     } catch (err) {
@@ -106,7 +105,7 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const loadCourseDetails = async (courseId) => {
     try {
-      const { data } = await api.get(`/training/${courseId}`);
+      const { data } = await trainingService.getCourseById(courseId);
       setActiveCourse(data);
       setSessions(data.sessions);
       setSelectedSession(null);
@@ -138,7 +137,7 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
   const saveAttendance = async () => {
     setLoading(true);
     try {
-      await api.post(`/training/session/${selectedSession.id}/attendance`, {
+      await trainingService.markAttendance(selectedSession.id, {
         attendance: attendanceSheet.map(item => ({ elderId: item.elderId, isPresent: item.isPresent }))
       });
       setMessage('Attendance sheet updated successfully!');

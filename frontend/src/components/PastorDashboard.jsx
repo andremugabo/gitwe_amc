@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import { trainingService, memberService } from '../services';
 import { 
   Users, 
   ThumbsUp, 
   Award, 
-  Send,
   AlertCircle,
-  CheckCircle2,
-  Bell
+  CheckCircle2
 } from 'lucide-react';
 
 const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
@@ -34,20 +32,20 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const fetchData = async () => {
     try {
-      const { data: membersData } = await api.get('/members');
+      const { data: membersData } = await memberService.getMembers();
       // Pastor sees elders under their local church / district scope
       setElders(membersData.filter(m => m.role === 'ELDER' || !m.role));
 
-      const { data: coursesData } = await api.get('/training');
+      const { data: coursesData } = await trainingService.getCourses();
       setCourses(coursesData);
 
       if (activeTab === 'recommend' || activeTab === 'dashboard') {
-        const { data: recsData } = await api.get('/training/recommend/list');
+        const { data: recsData } = await trainingService.getRecommendations();
         setRecommendations(recsData);
       }
 
       if (activeTab === 'notifications') {
-        const { data } = await api.get('/training/notifications');
+        const { data } = await trainingService.getNotifications();
         setNotifications(data);
       }
     } catch (err) {
@@ -62,7 +60,7 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
     setMessage('');
 
     try {
-      await api.post('/training/recommend', recForm);
+      await trainingService.recommendElder(recForm);
       setMessage('Elder recommended successfully! Field Secretary has been notified.');
       setRecForm({ courseName: '', elderId: '', notes: '' });
       setShowRecForm(false);
