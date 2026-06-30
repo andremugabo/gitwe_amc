@@ -9,6 +9,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
   
   const { login } = useAuth();
   const { t } = useLanguage();
@@ -24,6 +26,10 @@ const Login = () => {
       navigate('/dashboard');
     } else {
       setError(result.message);
+      if (result.unverified) {
+        setIsUnverified(true);
+        setUnverifiedEmail(result.email || email);
+      }
     }
     setLoading(false);
   };
@@ -46,9 +52,21 @@ const Login = () => {
         <div className="p-8 bg-white">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 rounded-lg animate-in slide-in-from-top-1 duration-300">
-                <AlertCircle size={18} />
-                <span>{error}</span>
+              <div className="space-y-2 p-3 text-sm text-red-600 bg-red-50 rounded-lg animate-in slide-in-from-top-1 duration-300">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={18} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+                {isUnverified && (
+                  <div className="pt-1.5 border-t border-red-200/50">
+                    <Link
+                      to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
+                      className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
+                    >
+                      Click here to enter your verification code and activate your account &rarr;
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

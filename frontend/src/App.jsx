@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context';
 import { LanguageProvider } from './context';
 import { ErrorBoundary } from './components';
-import { Login, Register, ResetPassword, Dashboard } from './pages';
+import { Login, Register, ResetPassword, Dashboard, VerifyEmail } from './pages';
 
 // Helper to determine the dashboard path based on user role
 export const getRoleDashboardPath = (role) => {
@@ -49,6 +49,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               
               {/* Role-Specific Dashboard Routes */}
               <Route 
