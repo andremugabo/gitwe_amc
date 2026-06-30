@@ -1,0 +1,67 @@
+@startuml Work_Breakdown_Structure
+!theme plain
+skinparam defaultTextAlignment center
+skinparam roundcorner 10
+skinparam dpi 150
+
+' Color definitions
+skinparam rectangle {
+    BackgroundColor<<Project>> #2C3E50
+    FontColor<<Project>> white
+    BackgroundColor<<Phase>> #3498DB
+    FontColor<<Phase>> white
+    BackgroundColor<<Task>> #ECF0F1
+    BorderColor #BDC3C7
+}
+
+title <color:#2C3E50>Figure 2: Work Breakdown Structure</color>
+
+rectangle "Gitwe AMC\nIntegrated Platform" <<Project>> as GitweAMC
+
+rectangle "1. Planning & Analysis" <<Phase>> as Planning
+rectangle "1.1 Requirements\nGathering" <<Task>> as Req
+rectangle "1.2 Feasibility\nStudy" <<Task>> as Feas
+
+rectangle "2. System Design" <<Phase>> as Design
+rectangle "2.1 UI/UX Core\nPrototyping" <<Task>> as UI
+rectangle "2.2 DB Schema\n(Hierarchy Mapping)" <<Task>> as DBDesign
+rectangle "2.3 System\nArchitecture" <<Task>> as Arch
+
+rectangle "3. System Implementation" <<Phase>> as Dev
+rectangle "3.1 Authentication\n& RBAC" <<Task>> as AuthDev
+rectangle "3.2 Hierarchy &\nRecords Module" <<Task>> as RecDev
+rectangle "3.3 Elder Training\n& Intake Mod" <<Task>> as TrainDev
+
+rectangle "4. Testing & QA" <<Phase>> as Testing
+rectangle "4.1 Unit & Integration\nTesting" <<Task>> as Unit
+rectangle "4.2 Notification\nWorkflow Test" <<Task>> as Int
+rectangle "4.3 User Acceptance\nTesting (UAT)" <<Task>> as UAT
+
+rectangle "5. Deployment & Docs" <<Phase>> as Deploy
+rectangle "5.1 Production\nDeployment" <<Task>> as Host
+rectangle "5.2 Thesis Report\nFinalization" <<Task>> as Docs
+
+GitweAMC --> Planning
+GitweAMC --> Design
+GitweAMC --> Dev
+GitweAMC --> Testing
+GitweAMC --> Deploy
+
+Planning --> Req
+Planning --> Feas
+
+Design --> UI
+Design --> DBDesign
+Design --> Arch
+
+Dev --> AuthDev
+Dev --> RecDev
+Dev --> TrainDev
+
+Testing --> Unit
+Testing --> Int
+Testing --> UAT
+
+Deploy --> Host
+Deploy --> Docs
+@enduml

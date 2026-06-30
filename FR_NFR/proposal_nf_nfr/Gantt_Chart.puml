@@ -1,0 +1,43 @@
+@startgantt Gantt_Chart
+!theme plain
+Project starts 2026-03-01
+saturday are closed
+sunday are closed
+
+printscale weekly
+title <color:#2C3E50>Project Gantt Chart (March - July 2026)</color>
+
+[1. Planning & Requirements] lasts 14 days
+[Project Proposal Submission] happens at [1. Planning & Requirements]'s end
+
+[2. DB Schema & Arch Design] starts at [1. Planning & Requirements]'s end and lasts 14 days
+[3. UI/UX Prototyping] starts at [1. Planning & Requirements]'s end and lasts 10 days
+
+[4. Core Backend Setup (Auth & RBAC)] starts at [2. DB Schema & Arch Design]'s end and lasts 10 days
+[5. Hierarchy & Pastor Record Module] starts at [4. Core Backend Setup (Auth & RBAC)]'s end and lasts 14 days
+[6. Elder Training & Intake Web Mod] starts at [5. Hierarchy & Pastor Record Module]'s end and lasts 15 days
+
+[Mid-Term Review] happens at [5. Hierarchy & Pastor Record Module]'s end
+
+[7. Unit & Integration Testing] starts at [6. Elder Training & Intake Web Mod]'s end and lasts 15 days
+[8. User Acceptance Testing (UAT)] starts at [7. Unit & Integration Testing]'s end and lasts 7 days
+
+[9. System Deployment] starts at [8. User Acceptance Testing (UAT)]'s end and lasts 5 days
+[Final Thesis Defense] happens at [9. System Deployment]'s end
+
+[10. Thesis Documentation] starts 2026-03-01 and lasts 85 days
+
+[1. Planning & Requirements] is colored in #3498DB
+[2. DB Schema & Arch Design] is colored in #1ABC9C
+[3. UI/UX Prototyping] is colored in #1ABC9C
+
+[4. Core Backend Setup (Auth & RBAC)] is colored in #F1C40F
+[5. Hierarchy & Pastor Record Module] is colored in #F1C40F
+[6. Elder Training & Intake Web Mod] is colored in #F1C40F
+
+[7. Unit & Integration Testing] is colored in #E67E22
+[8. User Acceptance Testing (UAT)] is colored in #E67E22
+
+[9. System Deployment] is colored in #9B59B6
+[10. Thesis Documentation] is colored in #BDC3C7
+@endgantt

@@ -1,0 +1,60 @@
+\contentsline {chapter}{List of Figures}{iii}{Doc-Start}%
+\contentsline {chapter}{List of Abbreviations}{iv}{chapter*.1}%
+\contentsline {chapter}{Abstract}{vi}{table.0.1}%
+\contentsline {chapter}{\numberline {1}GENERAL INTRODUCTION}{1}{chapter.1}%
+\contentsline {section}{Introduction}{1}{section*.2}%
+\contentsline {section}{Background of the Study}{1}{section*.2}%
+\contentsline {section}{Problem Statement}{3}{section*.2}%
+\contentsline {section}{Choice and Motivation of the Study}{4}{section*.2}%
+\contentsline {section}{Objectives of the Study}{5}{section*.2}%
+\contentsline {subsection}{General Objectives}{5}{section*.3}%
+\contentsline {subsection}{Specific Objectives}{5}{section*.3}%
+\contentsline {section}{Scope of the Study}{6}{section*.3}%
+\contentsline {section}{Methodology and Techniques Used in the Study}{7}{section*.3}%
+\contentsline {section}{Expected Results}{10}{section*.3}%
+\contentsline {section}{Organization of the Work}{11}{section*.3}%
+\contentsline {chapter}{\numberline {2}ANALYSIS OF THE CURRENT SYSTEM}{12}{chapter.2}%
+\contentsline {section}{Introduction}{12}{section*.4}%
+\contentsline {section}{Description of Current System Environment}{12}{section*.4}%
+\contentsline {subsection}{Historical Background}{12}{section*.5}%
+\contentsline {subsection}{Mission}{13}{section*.5}%
+\contentsline {subsection}{Vision}{13}{section*.5}%
+\contentsline {section}{Description of the Current System}{13}{section*.5}%
+\contentsline {section}{Analysis of the Current System}{14}{section*.5}%
+\contentsline {section}{Modeling the Current System}{15}{section*.5}%
+\contentsline {chapter}{\numberline {3}PROPOSED SOLUTION}{16}{chapter.3}%
+\contentsline {section}{Overview of the Solution}{16}{section*.6}%
+\contentsline {section}{System Design}{16}{section*.6}%
+\contentsline {subsection}{Organizational Hierarchy Specifications}{17}{figure.caption.7}%
+\contentsline {subsection}{Functional Requirements (FR)}{17}{figure.caption.7}%
+\contentsline {subsection}{Non-Functional Requirements (NFR)}{17}{figure.caption.7}%
+\contentsline {section}{Key Features of the Proposed Solution}{18}{figure.caption.7}%
+\contentsline {subsection}{User Registration \& Authentication Module}{18}{section*.8}%
+\contentsline {subsection}{Dashboard Module}{18}{section*.8}%
+\contentsline {subsection}{Member Management Module}{18}{section*.8}%
+\contentsline {subsection}{Records Digitization Module}{18}{section*.8}%
+\contentsline {subsection}{Document Management Module}{18}{section*.8}%
+\contentsline {subsection}{Church Activity, Training \& Program Management Module}{19}{section*.8}%
+\contentsline {subsection}{Reporting Module}{19}{section*.8}%
+\contentsline {subsection}{Contribution \& Offering Management Module}{19}{section*.8}%
+\contentsline {subsection}{Attendance Tracking Module}{19}{section*.8}%
+\contentsline {subsection}{Communication Module}{19}{section*.8}%
+\contentsline {subsection}{Security \& Access Control Module}{19}{section*.8}%
+\contentsline {subsection}{Backup \& Recovery Module}{20}{section*.8}%
+\contentsline {subsection}{Audit Trail \& Logging Module}{20}{section*.8}%
+\contentsline {chapter}{\numberline {4}METHODOLOGY}{21}{chapter.4}%
+\contentsline {section}{Data Collection}{21}{section*.9}%
+\contentsline {section}{Testing and Validation}{21}{section*.9}%
+\contentsline {chapter}{\numberline {5}WORK PLAN AND TIMELINE}{22}{chapter.5}%
+\contentsline {section}{Tasks and Milestones}{22}{section*.10}%
+\contentsline {chapter}{\numberline {6}EXPECTED OUTCOMES}{26}{chapter.6}%
+\contentsline {section}{Expected Deliverables}{26}{section*.13}%
+\contentsline {section}{Potential Limitations}{26}{section*.13}%
+\contentsline {chapter}{\numberline {7}CONCLUSION}{27}{chapter.7}%
+\contentsline {section}{Importance of the Project}{27}{section*.14}%
+\contentsline {section}{Summary of the Plan}{27}{section*.14}%
+\contentsline {section}{Expected Outcomes}{27}{section*.14}%
+\contentsline {chapter}{\numberline {8}REFERENCES}{28}{chapter.8}%
+\contentsline {chapter}{APPENDICES}{29}{chapter*.15}%
+\contentsline {section}{Data Collection Letter}{29}{section*.16}%
+\contentsline {section}{Case Study Organization Approval Letter}{29}{section*.16}%

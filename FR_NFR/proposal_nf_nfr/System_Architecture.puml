@@ -1,0 +1,80 @@
+@startuml System_Architecture
+!theme plain
+skinparam componentStyle rectangle
+skinparam roundcorner 10
+skinparam dpi 150
+
+' Color definitions
+skinparam package {
+  BackgroundColor<<Presentation>> #E3F2FD
+  BackgroundColor<<Application>> #E8F5E9
+  BackgroundColor<<Data>> #FFF3E0
+  BorderColor #2C3E50
+  FontColor #2C3E50
+  FontSize 14
+}
+
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #34495E
+  ArrowColor #2980B9
+}
+
+skinparam database {
+  BackgroundColor #FFE0B2
+  BorderColor #E67E22
+}
+
+skinparam cloud {
+  BackgroundColor #FCE4EC
+  BorderColor #C2185B
+}
+
+title <color:#2C3E50>Figure 1: System Architecture</color>
+
+package "Presentation Layer (Client)" <<Presentation>> {
+  [Admin Dashboard\n(Web)] as AdminWeb #BBDEFB
+  [Pastor/Elder Portal\n(Mobile/Web)] as PastorPortal #BBDEFB
+}
+
+package "Application Layer (Backend)" <<Application>> {
+  interface "RESTful API / GraphQL" as API #C8E6C9
+
+  component "Authentication &\nAuthorization (RBAC)" as Auth #A5D6A7
+  component "Hierarchy Mgmt\n(Union -> Church)" as Hierarchy #A5D6A7
+  component "Pastor & Member\nRecords" as Records #A5D6A7
+  component "Elder Training &\nIntake Mgmt" as Training #A5D6A7
+  component "Reporting Engine" as Reporting #A5D6A7
+  component "Notification Trigger" as Notification #A5D6A7
+}
+
+package "Data Layer" <<Data>> {
+  database "Relational Database\n(PostgreSQL/MySQL)" as DB {
+    [Organizational Tables]
+    [User Profiles]
+    [Course/Training Data]
+  }
+}
+
+cloud "External Services" {
+  [SMS / Email\nGateway] as SMTP #F8BBD0
+}
+
+AdminWeb --> API
+PastorPortal --> API
+
+API --> Auth
+API --> Hierarchy
+API --> Records
+API --> Training
+API --> Reporting
+
+Auth --> DB
+Hierarchy --> DB
+Records --> DB
+Training --> DB
+Reporting --> DB
+
+Training --> Notification
+Notification --> SMTP
+@enduml

@@ -1,0 +1,650 @@
+% Setting up the document class and required packages
+\documentclass[12pt]{report}
+\usepackage{mathptmx} % Times New Roman equivalent for PDFLaTeX
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,top=0.5in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage{setspace} % For controlling line spacing
+\usepackage{tocloft} % For customizing table of contents, list of tables/figures
+\usepackage{indentfirst} % Indent first paragraph of sections
+\usepackage{hyperref} % For hyperlinks in TOC
+\usepackage{graphicx} % For figures
+\usepackage[font=normalsize,labelfont=bf,justification=raggedright,singlelinecheck=false]{caption} % Left-aligned captions
+\usepackage{parskip} % For paragraph spacing
+\usepackage{footnote} % For footnote formatting
+\usepackage{etoolbox} % For patching commands
+\usepackage{tikz}
+\usepackage{circuitikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage{longtable}  % For tables spanning multiple pages
+\usepackage{array}      % For p{width} column specification
+\usepackage{enumitem}   % For custom list labels
+\usepackage[table]{xcolor} % For table coloring
+\usepackage{booktabs}    % For high-quality, professional table lines
+\usepackage{amssymb}       % For mathematical symbols and checkboxes
+\usepackage{titlesec}    % For section title spacing control
+\usepackage{float}       % For [H] placement specifier
+\usepackage{subcaption}  % For subfigures
+\usepackage{pdflscape}  % For landscape pages
+\onehalfspacing             % Set global 1.5 line spacing
+\AtBeginEnvironment{tabular}{\onehalfspacing}
+\AtBeginEnvironment{longtable}{\onehalfspacing}
+\captionsetup{font={onehalfspacing,normalsize}}
+\setcounter{secnumdepth}{0} % Suppress section numbering
+\setcounter{tocdepth}{3}    % Keep sections in TOC
+
+% Define professional colors for the Data Dictionary
+\definecolor{TableBlue}{RGB}{0, 51, 102} % Dark Navy Blue for headers
+\definecolor{TableLightGray}{RGB}{245, 245, 245} % Ultra-light gray for zebra striping
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}} % Fixed width, ragged-right wrapping
+\newcommand{\GitweAMC}{Gitwe AMC Administration Platform} % Unified project name macro
+\usepackage{fontawesome5} % Professional icons for CVs
+\usepackage{multicol}      % For multi-column skills block
+
+\raggedbottom
+
+% Font size for headings
+\makeatletter
+% Chapter title: Centered, Large, Bold, NO NUMERALTATION
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\centering}
+  {}
+  {0pt}
+  {\Large\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-0.8\baselineskip}{0.5\baselineskip}
+
+% Section title: Centered, 14pt, bold
+\titleformat{\section}
+  {\centering\normalfont\large\bfseries\fontsize{14}{16.8}\selectfont}
+  {}
+  {0pt}
+  {}
+\titlespacing*{\section}{0pt}{0.6\baselineskip}{0.3\baselineskip}
+
+% Subsection title: Left-aligned, 14pt, bold
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\fontsize{14}{16.8}\selectfont}
+  {}
+  {0pt}
+  {}
+\titlespacing*{\subsection}{0pt}{0.6\baselineskip}{0.3\baselineskip}
+\makeatother
+
+% Customize TOC, LOT, LOF
+\setlength{\cftbeforetoctitleskip}{0.5\baselineskip} % Triple space before TOC title
+\setlength{\cftaftertoctitleskip}{2\baselineskip} % Double space after TOC title
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\cfttoctitlefont}{\hfill\Large\bfseries\fontsize{16}{19.2}\selectfont}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\listfigurename}{List of Figures}
+\renewcommand{\cftloftitlefont}{\hfill\Large\bfseries\fontsize{16}{19.2}\selectfont}
+\renewcommand{\cftafterloftitle}{\hfill}
+\renewcommand{\cftchapfont}{\normalsize\bfseries}
+\renewcommand{\cftsecfont}{\normalsize}
+\renewcommand{\cftsubsecfont}{\normalsize}
+
+% Force TOC to be unnumbered
+\setlength{\cftchapindent}{0pt}
+\setlength{\cftsecindent}{1.5em}
+\setlength{\cftsubsecindent}{3.0em}
+\setlength{\cftchapnumwidth}{0pt}
+\setlength{\cftsecnumwidth}{0pt}
+\setlength{\cftsubsecnumwidth}{0pt}
+
+\makeatletter
+\renewcommand{\cftchappresnum}{\setbox0\hbox\bgroup}
+\renewcommand{\cftchapaftersnum}{\egroup}
+\renewcommand{\cftsecpresnum}{\setbox0\hbox\bgroup}
+\renewcommand{\cftsecaftersnum}{\egroup}
+\renewcommand{\cftsubsecpresnum}{\setbox0\hbox\bgroup}
+\renewcommand{\cftsubsecaftersnum}{\egroup}
+\makeatother
+
+% Page numbering setup
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear header/footer
+\fancyfoot[C]{\thepage} % Page number at bottom center
+\renewcommand{\headrulewidth}{0pt} % No header rule
+
+\begin{document}
+
+% --- TITLE PAGE ---
+\thispagestyle{empty}
+\begin{center}
+\vspace*{0in}
+{\fontsize{14}{16.8}\selectfont \textbf{ADVENTIST UNIVERSITY OF CENTRAL AFRICA}} \\
+{\fontsize{14}{16.8}\selectfont \textbf{Information Technology}} \\
+{\fontsize{14}{16.8}\selectfont \textbf{Network and Communication Systems}}
+
+\vfill
+{\fontsize{16}{22}\selectfont\bfseries Project Title \\
+INTEGRATED DIGITAL PLATFORM FOR CHURCH ADMINISTRATION AND RECORDS MANAGEMENT (GITWE AMC)}
+
+\vfill
+{\fontsize{12}{16.8}\selectfont A Final Year Project Proposal Submitted in Partial \\
+Fulfillment of the Requirements for the Degree of \\
+Bachelor of Science in Information Technology \\
+in \\
+Network and Communication Systems}
+
+\vfill
+{\fontsize{12}{16.8}\selectfont \textbf{Submitted By} \\
+\vspace{0.3in}
+\begin{tabular}{ll}
+    Name: & UYISABYE Donatha  \\
+    ID: & 25874 \\
+    Phone No: & 0789205906 \\
+    Email: & donathauyisabye6@gmail.com \\
+\end{tabular}}
+
+\vfill
+{\fontsize{12}{16.8}\selectfont \textbf{Submission Date:} \\
+April 2026}
+\end{center}
+
+\newpage
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\newpage
+
+\chapter*{LIST OF ABBREVIATIONS}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+\begin{longtable}{L{3cm} L{12cm}}
+\textbf{ACID} & Atomicity, Consistency, Isolation, Durability \\
+\textbf{API} & Application Programming Interface \\
+\textbf{AUCA} & Adventist University of Central Africa \\
+\textbf{BCrypt} & Blowfish Crypt Password Hashing Algorithm \\
+\textbf{CSS} & Cascading Style Sheets \\
+\textbf{DB} & Database \\
+\textbf{DBMS} & Database Management System \\
+\textbf{DevOps} & Development and Operations \\
+\textbf{Docker} & Containerization and Deployment Platform \\
+\textbf{Express} & Fast, unopinionated, minimalist web framework for Node.js \\
+\textbf{FK} & Foreign Key \\
+\textbf{GB} & Gigabyte \\
+\textbf{GMP} & Gitwe Ministerial Platform \\
+\textbf{HTML} & Hypertext Markup Language \\
+\textbf{HTML5} & Hypertext Markup Language Version 5 \\
+\textbf{HTTP} & Hypertext Transfer Protocol \\
+\textbf{HTTPS} & Hypertext Transfer Protocol Secure \\
+\textbf{i18n} & Internationalization \\
+\textbf{ICT} & Information and Communication Technologies \\
+\textbf{IT} & Information Technology \\
+\textbf{JSON} & JavaScript Object Notation \\
+\textbf{JWT} & JSON Web Token \\
+\textbf{LTS} & Long Term Support \\
+\textbf{MB} & Megabyte \\
+\textbf{Node.js} & JavaScript Runtime Environment \\
+\textbf{npm} & Node Package Manager \\
+\textbf{OOM} & Object Oriented Methodology \\
+\textbf{OOP} & Object Oriented Programming \\
+\textbf{ORM} & Object Relational Mapping \\
+\textbf{PDF} & Portable Document Format \\
+\textbf{PK} & Primary Key \\
+\textbf{PostgreSQL} & Powerful, open-source object-relational database system \\
+\textbf{Prisma} & Next-generation Node.js and TypeScript ORM \\
+\textbf{QR} & Quick Response Code \\
+\textbf{RAM} & Random Access Memory \\
+\textbf{RBAC} & Role Based Access Control \\
+\textbf{REQ} & Requirement \\
+\textbf{REST} & Representational State Transfer \\
+\textbf{RUM} & Rwanda Union Mission \\
+\textbf{SMS} & Short Message Service \\
+\textbf{SQL} & Structured Query Language \\
+\textbf{SSD} & Solid State Drive \\
+\textbf{SSL} & Secure Sockets Layer \\
+\textbf{UI} & User Interface \\
+\textbf{UML} & Unified Modeling Language \\
+\textbf{URL} & Uniform Resource Locator \\
+\textbf{UUID} & Universally Unique Identifier \\
+\textbf{UX} & User Experience \\
+\textbf{VARCHAR} & Variable Character \\
+\textbf{VS Code} & Visual Studio Code \\
+\end{longtable}
+\newpage
+
+\section*{ABSTRACT}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The Integrated Digital Platform for Church Administration and Records Management (Gitwe AMC) addresses the critical need to modernize administrative operations across the hierarchical levels of the Adventist Church—spanning from the Union and Fields down to Districts and Local Churches. Developed primarily for the Gitwe Ministerial Training School, the overarching purpose of this platform is to serve as the technological backbone that streamlines the management of robust training programs for local church elders, coordinates certified trainers physically or remotely tied to the Gitwe campus, and efficiently documents the operational responsibilities of pastors across the extensive national structure.
+
+Currently, institutional administration across these levels relies heavily on fragile, fragmented manual record-keeping systems. This physical paper-backbone consistently results in severe data insufficiency, extensive 15--30 minute delays during basic querying, and the loss of nearly 40\% of informal entries. Moreover, the inability to swiftly cross-reference pastoral credentials or orchestrate concurrent elder training classes across hundreds of congregations heavily throttles the church's strategic communication and administrative efficiency.
+
+To comprehensively resolve these bottlenecks, the proposed platform will be constructed using a robust modern full-stack web architecture. The front-end interface will utilize React or a comparable component-based framework to provide an accessible, mobile-responsive portal for pastors and elders. The application backend will be powered by a scalable runtime, Node.js and Express, seamlessly connected to a robust relational database like PostgreSQL, fundamentally engineered to accurately map the complex one-to-many organizational hierarchy of the Adventist Church.
+
+Ultimately, by transitioning to this secure, centralized digital ecosystem, the Gitwe AMC platform will guarantee the absolute integrity and long-term accessibility of church archives. The system will empower administrators with instantaneous, automated multi-level reporting capabilities and strictly enforced hierarchical role-based security, thereby drastically enhancing institutional workflow and fostering data-driven decision-making.
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\chapter{GENERAL INTRODUCTION}
+
+\section{Introduction}
+The Digital Platform for Church Administration and Record Management was developed to address challenges in managing trainee records and communication within the ministerial school at Gitwe Ministerial Center, under Rwanda Union Mission. Currently, the organization of elder training relies on physical paperwork and informal communication passed from Union leaders to field leaders, then to pastors, who select elders to attend training. This chain of communication is unreliable, often causing delays, lost information, and elders failing to arrive on time for training sessions.
+
+The proposed platform introduces a digital solution that makes record-keeping, scheduling, and communication faster, more organized, and more reliable. Union administrators can manage training schedules and monitor enrollment across all fields, while field leaders and pastors can register selected elders digitally. Trainees can access learning materials, view their schedules, and track their progress online. All trainee information, attendance records, and training history are stored in a centralized database, enabling administrators to issue certificates to elders who successfully complete the program.
+
+Overall, the Digital Platform for Church Administration and Record Management demonstrates how digital technology can improve coordination, communication, and record-keeping within the ministerial training process at Gitwe Ministerial Center, helping Rwanda Union Mission deliver a more organized, reliable, and effective training program for church elders across all fields.
+
+\section{Background of the Study}
+Record management and communication play a very important role in the success and sustainability of religious and training institutions. In today's rapidly changing environment, organizations responsible for training and developing church leaders rely heavily on well-organized records and reliable communication channels to coordinate their programs effectively. Proper record management ensures that trainee information, attendance, progress, and certification are accurately maintained and easily accessible. When communication and records are well managed, institutions are able to plan effectively, track performance, and ensure that their programs run smoothly. However, when these processes are poorly managed, they result in disorganization, missed opportunities, and failure to deliver quality training programs.
+
+Historically, many religious and ministerial institutions have used manual methods to manage training records and communicate with trainees and field leaders. These methods include paper-based registration forms, physical attendance registers, handwritten progress reports, and verbal or phone-based communication through church leadership structures. While these methods served their purpose in earlier stages of church administration, they are increasingly inadequate in the context of modern institutional demands. Manual systems are associated with several limitations, including delayed communication, misplacement of records, duplication of information, and lack of reliable tracking mechanisms. Analyzing and retrieving information from paper-based records is time-consuming and inefficient, making it difficult for institutions to monitor progress, plan future training cycles, or maintain accurate histories of trained personnel.
+
+With the rapid advancement of digital technologies, many institutions worldwide are adopting digital management systems to improve efficiency and reliability in their operations. Educational and training institutions in particular have embraced digital platforms that enable them to manage records, communicate with participants, deliver learning content online, and issue certificates digitally. These platforms reduce manual workload, minimize errors, and ensure that all relevant parties are kept informed in a timely and organized manner. Furthermore, digital systems often include features such as centralized databases, automated notifications, online learning modules, and reporting tools that help institutions manage their programs more effectively and make informed decisions based on accurate data.
+
+In Rwanda, there has been significant progress in the adoption of information and communication technology across both public and private institutions. The Government of Rwanda continues to promote digital transformation as a key pillar of national development, encouraging organizations in all sectors to embrace technology in order to improve efficiency, transparency, and service delivery. Religious institutions and church organizations are also increasingly recognizing the importance of adopting digital tools to support their administrative and training functions. However, despite this progress, many church-based institutions still rely heavily on manual and informal methods to manage records and coordinate training programs, which limits their capacity to deliver organized and reliable services.
+
+Rwanda Union Mission operates a ministerial school at Gitwe Ministerial Center that is responsible for training church elders drawn from all fields under the Union. Each training session brings together elders from across Rwanda for a two-week residential program, with each field sending six elders per session. The current process of organizing and communicating these training sessions depends on a long chain of informal communication, starting from Union administrators who plan the sessions, to field leaders who are notified through meetings or phone calls, to pastors who select elders based on availability, and finally to the elders themselves. This chain is unreliable and often results in poor coordination, late arrivals, incomplete records, and missed training opportunities. Furthermore, there is no centralized system for storing trainee records, tracking attendance, managing learning materials, or issuing certificates, making it difficult for administrators to maintain accurate histories of trained elders across all fields.
+
+To address these challenges, this study proposes the development of the Digital Platform for Church Administration and Record Management at Gitwe Ministerial Center. The system is designed as a web-based platform that enables Union administrators to plan and manage training sessions digitally, field leaders and pastors to register selected elders online, and trainees to access learning materials and track their training progress. The platform also provides a centralized database for storing all trainee records, attendance information, and training histories, ensuring that data is easily retrievable and well organized.
+
+Furthermore, the platform integrates communication features including notifications and updates that keep all parties informed about training schedules, selection confirmations, and any changes to planned sessions. This reduces the dependence on informal communication channels and ensures that elders are notified in time to prepare and report for training as required. Upon successful completion of the program, the system enables administrators to generate and issue digital certificates to qualifying trainees, replacing the manual and paper-based processes currently in use.
+
+From an academic perspective, this project demonstrates the practical application of software engineering and web development principles in solving real-world administrative challenges within a religious training institution. It also contributes to the broader digital transformation agenda in Rwanda by showing how modern digital platforms can improve record management, communication, and service delivery in non-commercial institutions. The Digital Platform for Church Administration and Record Management therefore not only addresses the specific operational challenges faced by Gitwe Ministerial Center, but also provides a scalable solution that can be adapted by other church institutions facing similar administrative challenges across Rwanda and beyond.
+
+\section{Problem Statement}
+The core problem addressed in this study is the absence of a centralized, integrated, and digital system for managing trainee records, communication, and learning activities within the ministerial school at Gitwe Ministerial Center, under Rwanda Union Mission. The current process of organizing and coordinating elder training relies heavily on manual and informal methods such as phone calls, verbal communication through meetings, paper-based registration forms, and physical attendance registers. This fragmented approach results in inefficiencies in selecting, notifying, registering, and tracking trainees, which negatively affects the quality, reliability, and overall effectiveness of the ministerial training program.
+
+In addition, the lack of a centralized system limits the ability of Union administrators to monitor training progress and make timely, informed decisions. Trainee information is often scattered across different paper records managed by different field leaders and pastors, making it difficult to establish a unified and reliable database of trained elders. As a result, administrators do not have immediate access to accurate and complete information regarding trainee enrollment, attendance, training history, and certification status across all fields under Rwanda Union Mission.
+
+Several specific operational challenges further define the problem:
+\begin{itemize}
+    \item Manual and informal communication processes delay the selection and notification of elders for training, as information is passed through a long chain from Union administrators to field leaders, then to pastors, and finally to elders, increasing the risk of miscommunication, late notifications, and elders failing to report for training on time.
+    \item Absence of a centralized trainee record management system makes it difficult to maintain accurate and up-to-date records of registered trainees, attendance, and training progress, as information is recorded on paper and stored separately by different field leaders and administrators without a unified platform.
+    \item Lack of an online learning platform limits trainees' access to learning materials before and during training sessions, as all content is currently delivered in person during the two-week residential program, leaving no means for trainees to prepare in advance or continue learning after the session.
+    \item Inadequate tracking and reporting tools prevent administrators from effectively monitoring trainee participation across all fields, identifying attendance patterns, or generating accurate reports on the performance and outcomes of each training session.
+    \item Absence of a digital certification system means that the process of recognizing elders who successfully complete the training program relies on manual and paper-based methods, which are slow, prone to errors, and difficult to verify or retrieve in the future.
+\end{itemize}
+
+\section{Choice and Motivation of the Study}
+There is a need to develop a digital platform for church administration and record management to address challenges in coordinating elder training, managing trainee records, and facilitating communication at Gitwe Ministerial Center under Rwanda Union Mission. Currently, the absence of a centralized system makes it difficult to register trainees, track attendance, deliver learning content, and issue certificates efficiently. The proposed platform will digitize these processes while improving communication between Union administrators, field leaders, pastors, and trainees, providing reliable records and supporting better decision-making across all training cycles.
+
+\subsection*{To AUCA}
+The development of the Digital Platform for Church Administration and Record Management provides an opportunity to apply the theoretical and practical knowledge gained during my studies at AUCA. This project demonstrates the practical use of software development concepts, system analysis, database management, and web-based application development. It contributes to solving real-world administrative challenges within a religious training institution in Rwanda and reflects AUCA's mission of producing skilled graduates who contribute to national development through innovation and technology.
+
+\subsection*{To Gitwe Ministerial Center}
+This platform offers a digital solution that improves how trainee records are managed, how communication is handled between the Union and field leaders, and how learning materials are delivered and accessed. By centralizing records and streamlining the training process, the system enhances transparency, accountability, and organizational efficiency, supporting Rwanda Union Mission's goal of delivering well-coordinated and effective ministerial training programs for church elders.
+
+\subsection*{To the Student}
+This project provides practical experience in designing and developing a real-world software system that addresses administrative challenges in a religious institution. It allows the application of web development skills, system design principles, database management, and problem-solving techniques. Through this work, the student aims to contribute to Rwanda's digital transformation efforts while gaining valuable experience in software engineering, system integration, and institutional record management.
+
+\section{Objectives of the Study}
+
+\subsection{General Objectives}
+The general objective of this study is to design and implement a Digital Platform for Church Administration and Record Management for Gitwe Ministerial Center under Rwanda Union Mission. The system aims to centralize and digitize the management of trainee records, communication, online learning, and certification using Node.js and Express on the backend. It seeks to improve coordination between Union administrators, field leaders, pastors, and trainees, reduce delays in training communication, enhance record accuracy, and provide administrators with reliable reports for better decision-making across all training cycles.
+
+\subsection{Specific Objectives}
+\begin{itemize}
+    \item To design and implement a secure, web-based platform that enables Union administrators to plan and manage elder training sessions digitally, allowing field leaders and pastors to register selected trainees online and receive timely notifications about upcoming training programs.
+    \item To create a user-friendly interface that is simple and intuitive for all users including Union administrators, field leaders, pastors, and trainees, minimizing complexity and encouraging easy adoption of the system across all fields under Rwanda Union Mission.
+    \item To develop a centralized and structured database for securely storing, retrieving, and managing all trainee information including registration records, attendance, training history, and supporting documents in an organized manner that supports efficient access, tracking, and reporting across all fields.
+    \item To develop an online learning module that enables trainees to access learning materials, training resources, and course content digitally before and during training sessions, reducing dependence on in-person delivery of all learning content.
+    \item To implement a digital certification system that enables administrators to generate and issue certificates to elders who successfully complete the ministerial training program, replacing the current manual and paper-based certification process.
+    \item To implement role-based access control that ensures secure access to the system by allowing different users such as Union administrators, field leaders, pastors, and trainees to access only the functionalities relevant to their roles while protecting sensitive institutional information.
+    \item To implement multilingual support for the digital Platform for church Administration and Record Management in the three official languages of Rwanda – Kinyarwanda, English, and French – enabling all users across all fields under Rwanda Union Mission to interact with the system in their preferred language.
+\end{itemize}
+
+\section{Scope of the Study}
+This study focuses on the design and development of the Digital Platform for Church Administration and Record Management for Gitwe Ministerial Center under Rwanda Union Mission, to improve the coordination of elder training through a centralized and digital platform. The system will handle trainee registration, attendance tracking, communication, online learning, and digital certification, ensuring that all training-related processes are properly recorded, managed, and accessible to all relevant parties. It mainly covers backend development using Node.js and Express, supporting key processes such as trainee enrollment, record management, notification delivery, learning content access, and certificate generation.
+
+The scope of the study includes digitizing the core processes of ministerial training administration within the organization. These processes involve registering selected elders from all fields under Rwanda Union Mission, storing their information in a centralized database, communicating training schedules and updates to field leaders, pastors, and trainees, and tracking attendance and progress throughout each training session. The system will also send notifications to keep all parties informed about upcoming sessions, schedule changes, and training updates. In addition, dashboards and reports will be developed to help Union administrators monitor trainee enrollment, attendance trends, and training outcomes across all fields.
+
+Furthermore, the system will provide an online learning module that allows trainees to access training materials and course content digitally, reducing complete dependence on in-person delivery of all learning resources. Upon successful completion of the program, administrators will be able to generate and issue digital certificates to qualifying elders, replacing the current paper-based certification process. All activities within the system will be recorded and retrievable, making it easier to review training histories and plan future sessions effectively.
+
+However, the study is limited to ministerial training administration, record management, communication, online learning, and certification only. It does not include other church operations such as financial management, tithe and offering records, church membership administration, or general church event management. Additionally, advanced artificial intelligence features, machine learning capabilities, and integration with external systems are not covered in this study.
+
+\section{Methodology and Techniques Used in the Study}
+To achieve the objectives of this study, a comprehensive qualitative research methodology was employed, combining multiple data collection techniques to ensure a deep understanding of the existing administration and record management processes at Gitwe Ministerial Center under Rwanda Union Mission. The selected approach is commonly used in information systems development as it helps in identifying real operational problems, understanding user needs, and translating them into system requirements for effective software design. The methods used in this study include documentation, observation, and interviews.
+
+\subsection*{Documentation}
+Documentation refers to the systematic review and analysis of existing written materials such as reports, records, procedures, and organizational documents in order to obtain reliable background information about a system under study (Bowen, 2009). It is widely used in software engineering research to understand current processes, identify system limitations, and define functional requirements for new systems (Pressman \& Maxim, 2020).
+
+In this study, documentation review was conducted at Gitwe Ministerial Center to examine how elder training records and communication are currently handled within the institution. The documents reviewed included trainee registration forms, attendance records, training schedules, field communication guidelines, and certification records used by Union administrators and field leaders. These documents helped to provide a clear understanding of the existing workflow for organizing and managing the ministerial training program.
+
+The review revealed several critical issues. Trainee information is recorded manually using paper-based forms with no standardized system for data entry or storage. There is no centralized platform for storing and tracking trainee records, resulting in scattered information across different fields and administrative offices. In addition, communication about training schedules relies on informal channels, and there are no structured reporting tools to help administrators monitor enrollment or training outcomes across all fields. These findings were essential in defining the requirements for the Digital Platform for Church Administration and Record Management.
+
+\subsection*{Observation}
+Observation is a qualitative research method that involves directly watching users and processes in their natural environment without interfering with their activities (Creswell \& Poth, 2018). This method is particularly useful in system analysis because it allows researchers to identify real-life inefficiencies that users may not explicitly report during interviews (Robson \& McCartan, 2016).
+
+In this study, direct observation was conducted at Gitwe Ministerial Center to understand how training sessions are organized, how trainees are selected and registered, and how records are maintained under real working conditions. It was observed that training coordination is managed through a chain of verbal and phone-based communication from Union administrators to field leaders, then pastors, and finally to the selected elders. All registration and attendance information is recorded manually on paper during and after each session.
+
+During observation, several inefficiencies were identified. Heavy reliance on informal communication channels frequently leads to delays in notifying selected trainees, resulting in late arrivals and incomplete attendance at training sessions. Record keeping is inconsistent across different fields, as there is no unified system for tracking which elders have been trained or certified. Repeated manual entry of information across different paper forms also increases the risk of errors and loss of records. These observations confirmed the need for a centralized and digital platform to improve efficiency, accuracy, and reliability in ministerial training administration.
+
+\subsection*{Interviews}
+Interviews are a qualitative research technique that involves structured or semi-structured discussions with stakeholders to collect detailed information about their experiences, challenges, and expectations (Seidman, 2013). This method is important in system development as it helps in gathering user requirements directly from those who interact with the system on a daily basis, allowing researchers to understand practical needs, expectations, and real-world constraints (Harding, 2019).
+
+In this study, structured interviews were conducted with selected Union administrators, field leaders, pastors, and trainees under Rwanda Union Mission. The aim was to understand the challenges faced in managing elder training records and communication and to gather expectations for an improved digital system. The interviews focused on current registration methods, communication challenges, records management difficulties, learning content delivery, and desired platform features.
+
+The responses indicated that Union administrators experience difficulties in tracking which elders have been selected and registered across all the fields, and lack reliable visibility into trainee enrollment and attendance status. Field leaders and pastors reported challenges in receiving timely communication about upcoming training sessions and in submitting trainees' information through a unified and organized channel. Trainees also highlighted difficulties in accessing learning materials outside of the residential training period and expressed the need for a more reliable way to receive updates about their training schedules and certification status. These insights were essential in shaping the functional requirements of the digital platform for Church Administration and Record Management, including centralized record management, online communication and notification features, an online learning module, and a digital certification system.
+
+\subsection*{Interview Questions and Summarized Responses}
+\begin{description}
+    \item[Question 1:] How is elder training currently organized and communicated to field leaders and trainees?
+    \item[Answer:] Training sessions are planned by Union administrators and communicated to field leaders through meetings or phone calls, who then inform pastors, who in turn notify selected elders verbally or by phone.
+    \item[Question 2:] What are the main challenges in coordinating elder training across all fields?
+    \item[Answer:] Delays in communication, late arrival of trainees, incomplete registration records, and difficulty confirming which elders have been selected from each field.
+    \item[Question 3:] How is trainee information currently recorded and stored?
+    \item[Answer:] Trainee information is recorded manually on paper forms and stored physically in administrative offices, making retrieval and tracking difficult.
+    \item[Question 4:] How important is a centralized digital system for managing trainee records?
+    \item[Answer:] Very important, as it would improve accuracy, reduce paperwork, and allow administrators to access trainee information quickly and reliably.
+    \item[Question 5:] How are learning materials currently delivered to trainees?
+    \item[Answer:] All learning content is delivered in person during the two-week residential training session, with no means for trainees to access materials before or after the session.
+    \item[Question 6:] How do administrators currently track attendance and training progress?
+    \item[Answer:] Attendance is recorded manually on paper registers during sessions, and there is no system for monitoring progress or generating reports on training outcomes across fields.
+    \item[Question 7:] Do trainees face difficulties receiving timely updates about training schedules and changes?
+    \item[Answer:] Yes, because communication depends on an informal chain of calls and meetings, updates are often delayed or do not reach all trainees in time, causing some to miss or arrive late for training.
+    \item[Question 8:] What impact does the current process have on the quality of the training program?
+    \item[Answer:] It negatively affects the program because disorganized communication and poor record management lead to incomplete attendance, lost records, and reduced overall effectiveness of the training sessions.
+    \item[Question 9:] How is certification currently handled for elders who complete the training?
+    \item[Answer:] Certificates are issued manually on paper after the training session, which is slow, difficult to verify, and hard to retrieve in the future.
+    \item[Question 10:] What improvements do you expect from a digital platform for ministerial training management?
+    \item[Answer:] Administrators, field leaders, and trainees expect a system that provides centralized record management, reliable notifications, online access to learning materials, digital certification, and reporting tools to improve coordination and transparency across all fields.
+\end{description}
+
+The responses confirmed and further expanded on the challenges identified during the field visit, providing detailed and practical insights into how the existing limitations directly affect the management of ministerial training at Gitwe Ministerial Center. These findings strengthened the understanding of the real operational problems faced by the Union administrators, field leaders, pastors and trainees, particularly in areas such as delayed communication, absence of centralized record keeping, manual certification processes and limited access to learning materials. As a result, they played a crucial role in shaping the system requirements and guiding the design priorities of the Digital Platform for Church Administration and Record Management, ensuring that the proposed solution is well aligned with actual user needs and effectively addresses the identified operational gaps within Rwanda Union Mission.
+
+\section{Expected Results}
+Expected results refer to the anticipated benefits and improvements that the implementation of the Digital Platform for Church Administration and Record Management will bring to Gitwe Ministerial Center under Rwanda Union Mission. The platform is designed to transform how elder training is organized, communicated, recorded, and delivered by making every stage of the process faster and more reliable.
+
+\begin{itemize}
+    \item \textbf{Improved Communication and Timely Notification of Trainees:} The platform will replace the current informal communication chain with a centralized notification system that directly informs field leaders, pastors, and trainees about training schedules and updates, ensuring all selected elders are notified in time and reducing late arrivals and missed sessions.
+    \item \textbf{Centralized and Reliable Trainee Record Management:} All trainee registration details, attendance records, and training histories will be stored in a single secure database, eliminating scattered paper-based records and giving administrators immediate access to accurate and complete trainee information across all fields.
+    \item \textbf{Online Access to Learning Materials:} The online learning module will allow trainees to access course content and training resources digitally before, during, and after residential sessions, reducing complete dependence on in-person content delivery and enabling better preparation among trainees.
+    \item \textbf{Enhanced Tracking and Administrative Reporting:} Real-time dashboards and reporting tools will allow administrators to monitor enrollment, attendance, and training outcomes across all fields, replacing manual record analysis and supporting informed decision-making for future training cycles.
+    \item \textbf{Digital Certification of Trained Elders:} The platform will enable administrators to generate and issue digital certificates to elders who successfully complete the program, replacing the current slow paper-based certification process with a reliable, verifiable, and easily retrievable system.
+\end{itemize}
+
+\section{Organization of the Work}
+This project is presented as a structured academic report divided into five chapters. Each chapter addresses a specific phase of the study, ranging from the identification of the problem, analysis of the existing system, to the design, implementation, and evaluation of the solution. The chapters are arranged in logical sequence so that each one builds upon the findings of the previous chapter, guiding the reader from the analysis of the problem at Gitwe Ministerial Center to the development of the Digital Platform for Church Administration and Record Management.
+
+\begin{description}
+    \item[Chapter One: General Introduction] Presents an overview of the study, including the background of the research, problem statement, motivation of the project, objectives, scope, methodology, and expected outcomes. This chapter establishes the foundations for understanding the need for the platform and what it aims to achieve for Rwanda Union Mission.
+    \item[Chapter Two: Analysis of the Existing System] Examines the current process of managing elder training, records, and communication at Gitwe Ministerial Center. It describes how training coordination is currently handled and identifies key limitations such as informal communication channels, scattered paper-based records, lack of online learning tools, and absence of a digital certification process.
+    \item[Chapter Three: Analysis and Design] Presents the requirements and design of the proposed platform. It includes functional and non-functional requirements, system architecture, and design models. This chapter explains how the system is structured and how its components interact to solve the identified administrative and record management challenges.
+    \item[Chapter Four: System Implementation and Testing] Describes the development process of the platform, including the tools and technologies used, implementation approach, and testing procedures. It also explains how the system was evaluated to ensure that it meets the intended requirements and functions correctly using Node.js and Express.
+    \item[Chapter Five: Conclusion and Recommendations] Summarizes the findings of the study, evaluates the overall outcomes of the project, and provides recommendations for future improvements. It also suggests possible enhancements to further improve the platform and its application in similar church and ministerial institutions.
+\end{description}
+
+\chapter{ANALYSIS OF THE CURRENT SYSTEM}
+
+\section{Introduction}
+The existing system for managing elder training, records, and communication at Gitwe Ministerial Center under Rwanda Union Mission is mainly manual and decentralized. Training sessions are planned by Union administrators and communicated to field leaders through meetings or phone calls, who then inform pastors, who in turn notify selected elders verbally or by phone. Trainee registration is recorded on paper forms with no centralized digital system to store or manage data across different fields, frequently resulting in late arrivals, incomplete attendance, and poor coordination.
+
+The process lacks standardized workflows, structured registration procedures, and proper follow-up mechanisms. There is no reliable notification system, no escalation process for handling late or absent trainees, and no means for tracking whether selected elders have been properly informed before training begins.
+
+Union administrators cannot easily monitor enrollment, track attendance across all fields, or measure training outcomes. Communication between the Union, field leaders, pastors, and trainees is entirely dependent on informal channels prone to delays and miscommunication, leaving trainees with no way to confirm their selection, access learning materials, or track their progress outside of the residential session.
+
+Furthermore, since trainee information is not stored centrally, management cannot identify participation trends, evaluate program performance, or make informed decisions about future sessions. The absence of a digital certification process also limits the ability to recognize and verify trained elders in a reliable manner.
+
+These challenges clearly demonstrate the need for a modern digital platform for church administration and record management at Gitwe Ministerial Center. The findings in this chapter provide the foundation for the system requirements and design decisions discussed in Chapter Three.
+
+\section{Description of Current System Environment}
+
+\subsection{Historical Background}
+Rwanda Union Mission was initially organized in 1960 to serve the growing Adventist population in the region. In 1984, the work in Rwanda and Burundi was formally separated, leading to the official reorganization of the Rwanda Union Mission, with Robert G. Peck serving as its first president. Further administrative reorganizations occurred in 2011 and 2014, strengthening the Union's capacity to oversee Adventist church activities across all fields in Rwanda.
+
+Gitwe Ministerial Center is located on the campus of Gitwe Adventist College, established in 1931 by missionary F. M. Robinson as a seminary for pastoral training. In 1972 it transitioned into Gitwe Adventist College, receiving official Government of Rwanda recognition in 1976. In 2019, Rwanda Union Mission revived the formal ministerial training program at Gitwe, and in 2020 a dedicated elder training school was established, providing two-week residential training sessions for six elders per field from across Rwanda.
+
+\subsection{Mission}
+The Rwanda Union Mission is committed to preaching the everlasting gospel in the context of the three angels' messages, leading people to accept Jesus as their personal Savior, and equipping church members to use their spiritual gifts to serve their communities.
+
+\subsection{Vision}
+The vision of Rwanda Union Mission is to see a spiritually transformed Rwanda where every community has access to the everlasting gospel, guided by the "I Will Go" initiative through Total Member Involvement, church planting, evangelistic campaigns, and community outreach. For Gitwe Ministerial Center, this vision means building well-trained, certified church elders available across all fields to support pastoral leadership and contribute to the spiritual and social development of their communities.
+
+\section{Description of the Current System}
+The existing system for managing elder training, records, and communication at Gitwe Ministerial Center under Rwanda Union Mission is predominantly manual and informal. Training sessions are planned by Union administrators and communicated to field leaders through meetings or phone calls. Field leaders then inform pastors, who select and notify elders verbally or by phone. Trainee registration and attendance are recorded manually on paper forms and physical registers at the Union offices and across different fields.
+
+\begin{itemize}
+    \item \textbf{Lack of Centralized Data Management:} Trainee records are stored separately across different fields without a shared system, making it difficult to consolidate information across Rwanda Union Mission. Administrators cannot easily access the total number of registered trainees, track attendance patterns, or monitor training outcomes across all fields. As a result, decisions about future training cycles are often made without reliable and complete data.
+    \item \textbf{Delayed Communication and Poor Coordination:} Since training coordination depends entirely on informal communication chains, notifications about upcoming sessions frequently reach field leaders, pastors, and trainees late. There are no standardized workflows or confirmation mechanisms to ensure that selected elders have been properly informed, resulting in late arrivals and incomplete attendance during training sessions.
+    \item \textbf{Absence of Online Learning Tools:} Trainees have no means of accessing learning materials outside of the two-week residential training session. All content is delivered in person, leaving trainees unable to prepare in advance or continue learning after the session ends, which limits the overall effectiveness of the training program.
+    \item \textbf{Inadequate Tracking and Monitoring:} Union administrators cannot monitor trainee enrollment, track attendance in real time, or generate structured reports on training outcomes across different fields. There are no tools for identifying participation trends or evaluating the performance of each training session, which limits the ability to improve program quality effectively.
+    \item \textbf{Absence of Digital Certification:} The current certification process is entirely paper-based and manual. Certificates are issued physically after each session with no digital record, making it difficult to verify, retrieve, or manage certification histories of trained elders across all fields under Rwanda Union Mission.
+\end{itemize}
+
+\section{Analysis of the Current System}
+The current system for managing elder training, records, and communication at Gitwe Ministerial Center is fundamentally manual and inefficient. An in-depth analysis reveals that disconnected communication channels and non-integrated record-keeping methods create significant operational challenges that negatively impact the quality and reliability of the ministerial training program.
+
+\begin{itemize}
+    \item \textbf{Fragmented Trainee Records:} Paper-based forms and registers maintained separately across different fields create data silos, forcing administrators to manually compile information when tracking enrollment, attendance, or training history.
+    \item \textbf{Delayed and Unreliable Communication:} Informal communication chains cause significant delays in notifying selected elders, resulting in poor preparation, late arrivals, and incomplete attendance during training sessions.
+    \item \textbf{Inefficient Manual Registration:} Selection and registration of trainees is handled manually without a standardized process, making it slow, inconsistent, and prone to errors and omissions across different fields.
+    \item \textbf{Lack of Operational Visibility:} Since records are not centralized, Union administrators cannot monitor enrollment trends, attendance rates, or training outcomes across all fields, limiting their ability to evaluate and improve the program effectively.
+    \item \textbf{Limited Access to Learning Resources:} Trainees have no means of accessing learning materials outside residential sessions, leaving them without resources to prepare in advance or continue studying after the session ends.
+    \item \textbf{Inability to Manage Certification Digitally:} Certificates are issued manually on paper with no centralized record, making it difficult to verify completion status or retrieve certification histories of trained elders.
+\end{itemize}
+
+\section{Modeling the Current System}
+The current workflow at Gitwe Ministerial Center is manual and fragmented, relying on disconnected communication channels and non-centralized paper records. Trainee registration, communication, learning content delivery, and certification are all handled through independent informal processes without integration, leading to limited coordination, delayed communication, and lack of real-time visibility across all fields. The proposed platform will improve efficiency, enhance transparency, reduce delays, and ensure better coordination and record management across all ministerial training sessions.
+
+The current elder training administration system at Gitwe Ministerial Center is entirely manual and decentralized. Training sessions are organized through informal communication chains, with trainee information recorded on paper forms and physical registers without a centralized digital system. There is no unique tracking number or automated logging process, making it difficult to monitor, retrieve, or follow up on trainee records efficiently. As a result, training coordination is slow, disorganized, and lacks proper tracking, transparency, and real-time monitoring. After registration, trainee information is manually stored at field level and forwarded to Union administrators through informal channels such as phone calls or handwritten notes, without standard procedures for verification, follow-up, or certification tracking.
+
+\begin{description}
+    \item[Step 1: Union Announces Training Program] The process begins when Union administrators plan and announce an upcoming two-week residential training session for church elders. This announcement is communicated to field secretaries through phone calls, emails, or meetings.
+    \item[Step 2: Notifying Field Leaders and Pastors] Field secretaries pass the information to pastors within their respective fields through meetings or phone calls. Pastors are responsible for selecting and notifying elders who will attend the training session.
+    \item[Step 3: Selection and Verbal Notification of Elders] Pastors select elders based on availability and notify them verbally or by phone. There is no digital confirmation system, making it difficult to verify whether all selected elders have been properly informed.
+    \item[Step 4: Trainee Registration on Paper Forms] Selected elders register for the training session by filling in paper-based registration forms. The information is collected manually without a centralized digital system, increasing the risk of errors and incomplete records.
+    \item[Step 5: Verification of Registration Information] A Union administrator reviews the submitted registration forms to check whether the information is complete. If details are missing or incorrect, the elder or pastor is contacted by phone and corrections are written on the paper form. Once verified, the registration is filed physically in the Union archives.
+\end{description}
+
+\chapter{PROPOSED SOLUTION}
+
+\section{Overview of the Solution}
+The proposed solution is a Web-based Integrated Digital Platform. By centralizing data storage while segmenting access based on the church's distinct organizational hierarchy, it creates an efficient, singular source of truth for the entire national administrative body.
+
+\section{System Design}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio]{/Users/ntgr/Desktop/This.Mac/MYPROJECT/DONATHA_PROJECT/out/FR_NFR/proposal_nf_nfr/System_Architecture/System_Architecture.png}
+    \caption{System Architecture Diagram detailing multi-tier workflows}
+\end{figure}
+
+As illustrated in Figure 1, the system architecture operates on a modern three-tier client-server paradigm adapted for hierarchical oversight. The Presentation Layer serves two distinct endpoints: a web dashboard for Union administrators and a mobile-responsive portal designed for Local Church pastors and elders. The Application Layer acts as the core orchestration engine, managing the complex "Elder Training" tracking and strictly enforcing Role-Based Access Control (RBAC) to ensure databound security within specific church jurisdictions (Fields/Districts). At the foundation, a robust relational database maintains the intricate one-to-many organizational mappings. Furthermore, an integrated notification gateway automates SMS and email alerts, ensuring the immediate and automated routing of critical training schedules directly to localized pastoral teams.
+
+\subsection{Organizational Hierarchy Specifications}
+The system models the Adventist Church structure as a one-to-many cascading relationship. A single \textbf{Union} oversees multiple \textbf{Fields}. Each Field manages multiple \textbf{Church Districts}, and each District supervises multiple \textbf{Local Churches}. Pastors, elders, and trainers are attached to these specific nodes, dictating their permissions and reporting scopes.
+
+\subsection{Functional Requirements (FR)}
+\begin{itemize}
+    \setlength{\itemsep}{0.5em}
+    \item \textbf{Hierarchy Management:} The system must allow super-administrators to create, modify, and view Unions, Fields, Districts, and Local Churches.
+    \item \textbf{Pastoral Record Management:} The system must record detailed profiles of all pastors across the country, specifying their titles and operational responsibilities based on their assigned church level (e.g., District Pastor vs. Local Church Pastor).
+    \item \textbf{Elder Training Administration:} The system must manage the complete lifecycle of local church elder training, including course creation, curriculum management, and assigning certified trainers.
+    \item \textbf{Course Intake Workflow:} The platform must handle intake operations, enrollment tracking, and completion certification for elders participating in training programs.
+    \item \textbf{Notification and Communication Chain:} The system must automate targeted notifications. When a training is scheduled, the system must inform the corresponding local church pastors, who are then responsible for mobilizing and informing their local church elders.
+    \item \textbf{Comprehensive Multi-Level Reporting:} The system must generate hierarchical reports (financial, attendance, training status), allowing the Union to view aggregated data, while local churches see only their specific metrics.
+\end{itemize}
+
+\subsection{Non-Functional Requirements (NFR)}
+\begin{itemize}
+    \setlength{\itemsep}{0.5em}
+    \item \textbf{Security \& Access Control:} The system shall enforce strict Role-Based Access Control (RBAC) tied to the organizational hierarchy, ensuring a user at the Local Church level cannot access Field-level financial records.
+    \item \textbf{Scalability:} The database and backend architecture shall support the concurrent access of thousands of pastors, trainers, and administrative clerks across the entire country without degradation in performance.
+    \item \textbf{Reliability \& Availability:} Essential communication and notification triggers between Fields, Pastors, and Elders must maintain a 99.9\% uptime to ensure critical training dates are not missed.
+    \item \textbf{Usability:} The UI must be responsive and accessible on mobile devices, as many local pastors and elders may rely on smartphones for receiving notifications and checking course intakes.
+\end{itemize}
+
+\section{Key Features of the Proposed Solution}
+
+\subsection{User Registration \& Authentication Module}
+\textbf{UI Elements:} Registration form with role selection; Personal information fields; Password strength indicator; Email verification interface; Role-based redirection; Multi-factor authentication setup. \\
+\textbf{Features:} Secure registration for church staff; Role-based access control (Admin, Pastor, Secretary, Member); Session monitoring and timeout controls; Audit-ready access tracking.
+
+\subsection{Dashboard Module}
+\textbf{UI Elements:} Role-based dashboard views; Member summary cards; Quick action buttons (Add Member, Create Report); Notification center; System announcements; Calendar view of church events. \\
+\textbf{Features:} Personalized dashboards for church roles; Real-time activity overview; Visual representation of key metrics; Centralized management view.
+
+\subsection{Member Management Module}
+\textbf{UI Elements:} Member directory with filters; Profile editing; Membership status (Active, Transfer, Deceased); Family/household grouping; Baptism tracking; Bulk import/export tools. \\
+\textbf{Features:} Comprehensive profile management; Family grouping for records; Attendance and participation monitoring; Contribution history; Advanced search and filtering.
+
+\subsection{Records Digitization Module}
+\textbf{UI Elements:} Drag-and-drop upload; Supported file formats (PDF, Image); Document categorization; OCR support; Manual data entry forms for paper records; Record validation workflows. \\
+\textbf{Features:} Conversion of paper records to digital; Multiple format support; OCR for text extraction; Verification workflow for accuracy; Preservation of historical info.
+
+\subsection{Document Management Module}
+\textbf{UI Elements:} Document repository with folder structure; Version control tracking; Search functionality; Permission-based sharing; Document access logs; Retention policy configuration. \\
+\textbf{Features:} Centralized storage for all records; Folder-based navigation; Versioning for updates; Secure archival and role-based permissions.
+
+\subsection{Church Activity, Training \& Program Management Module}
+\textbf{UI Elements:} Training course builder; Intake enrollment forms; Event scheduling calendar; Workflow triggers for pastoral notification; RSVP tracking for elders; Post-training certification generation. \\
+\textbf{Features:} Comprehensive training and program management; Responsible person and trainer assignment; Automated notification routing (Union $\rightarrow$ Pastor $\rightarrow$ Elder); Activity status monitoring.
+
+\subsection{Reporting Module}
+\textbf{UI Elements:} Report type selector; Date range filters; Custom report builder; Export formats (PDF, Excel, Word); Scheduled report configuration; Executive summary generator. \\
+\textbf{Features:} Multi-format export; Automated scheduled reporting; Data-driven insights for church administration; Report distribution to leadership.
+
+\subsection{Contribution \& Offering Management Module}
+\textbf{UI Elements:} Contribution recording interface; Type selector (Tithe, Offering, Mission); Amount entry; Payment method selection; Receipt generation; Member contribution history. \\
+\textbf{Features:} Digital recording of financials; Receipt generation for donors; Contribution statements for tax; Pledge fulfillment monitoring; Secure record keeping.
+
+\subsection{Attendance Tracking Module}
+\textbf{UI Elements:} Mobile-friendly check-in interface; Service selection; Member lookup; Visitor registration; Weekly attendance summary; Trend charts. \\
+\textbf{Features:} Efficient check-in for services; Visitor registration; Absentee identification for pastoral follow-up; Engagement monitoring apps.
+
+\subsection{Communication Module}
+\textbf{UI Elements:} Notification center; Broadcast message composer; Email/SMS template manager; Target group selection; Event reminders; Prayer request share interface. \\
+\textbf{Features:} Multi-channel messaging (Email, SMS, In-app); Targeted group communication; Announcement and reminders; Complete communication history.
+
+\subsection{Security \& Access Control Module}
+\textbf{UI Elements:} Role-based permission matrix; User access level config; Data sensitivity classification; Two-factor authentication; Login activity monitoring. \\
+\textbf{Features:} Granular role-based access; Data encryption for sensitive fields; Permission review and audit; Compliance with data protection principles.
+
+\subsection{Backup \& Recovery Module}
+\textbf{UI Elements:} Backup configuration; Scheduled backup settings; Manual trigger button; Restore point selection; Restoration confirmation; History viewer. \\
+\textbf{Features:} Automated data backup; Multiple frequency options (daily/weekly); Point-in-time restoration; Off-site backup for disaster recovery.
+
+\subsection{Audit Trail \& Logging Module}
+\textbf{UI Elements:} Audit log viewer; User action timeline; Modification history; Anomaly detection alerts; Export audit trail; Real-time monitoring dashboard. \\
+\textbf{Features:} Complete tracking of system activities; Modification history for accountability; Security activity logging; Forensic investigation support.
+
+\chapter{METHODOLOGY}
+The platform utilizes a modern web architecture. The frontend is constructed using React to ensure a responsive, accessible user interface suitable for both desktop and mobile use by pastors and elders. The backend leverages the Node.js and Express runtime paired with a robust PostgreSQL database capable of accurately mapping the complex one-to-many organizational hierarchy of the church.
+
+\section{Data Collection}
+Requirements gathering and data collection involve structured interviews with Union administrators, current field pastors, and church clerks. Furthermore, retrospective analyses of existing physical ledgers will be conducted to map the specific data requirements for the elder training intakes and pastoral responsibility logs.
+
+\section{Testing and Validation}
+Quality assurance will follow a rigorous testing protocol. Unit testing will be applied to the core business logic handling role-based access. Integration testing will validate the communication workflows (e.g., Union to Pastor notifications). Finally, User Acceptance Testing (UAT) will be conducted with real pastors and elder trainers to validate the usability and accuracy of the elder training workflow.
+
+\chapter{WORK PLAN AND TIMELINE}
+\section{Tasks and Milestones}
+The project lifecycle is organized into manageable sequential phases guided by SMART criteria. The workflow maps distinct deliverables based on an Agile framework across a four-month window:
+
+\subsection*{Project Initiation \& Requirements Gathering (Month 1)}
+\textbf{Purpose:} Establish the foundation and capture all technical/user requirements.\\
+\textbf{Tasks:}
+\begin{itemize}
+    \item Conduct interviews with Gitwe AMC administrators and pastors.
+    \item Document functional and non-functional requirements.
+    \item Finalize system architecture and UI/UX prototyping.
+\end{itemize}
+\textbf{Milestone:} Scope Document and System Architecture Blueprint finalized.
+
+\subsection*{System Design \& Database Implementation (Month 2)}
+\textbf{Purpose:} Build the core data schemas to handle the multi-level hierarchy.\\
+\textbf{Tasks:}
+\begin{itemize}
+    \item Implement the multi-level hierarchical database (Union to Local Church).
+    \item Develop primary authentication and RBAC security flows.
+    \item Build Member mapping and Dashboard modules.
+\end{itemize}
+\textbf{Milestone:} Core Database Schema and securely authenticated dashboards deployed on local test environments.
+
+\subsection*{Complex Workflow Development (Month 3)}
+\textbf{Purpose:} Integrate the primary business logic for training and communication.\\
+\textbf{Tasks:}
+\begin{itemize}
+    \item Construct Elder Training coordination tools and Intake enrollment forms.
+    \item Implement automated notification mapping.
+    \item Connect reporting engines for multi-tiered access.
+\end{itemize}
+\textbf{Milestone:} Fully functional Elder Training module with active notification pipelines.
+
+\subsection*{Testing, Validation \& Deployment (Month 4)}
+\textbf{Purpose:} Ensure platform stability, accuracy, and launch readiness.\\
+\textbf{Tasks:}
+\begin{itemize}
+    \item Perform rigorous Integration Testing on nested hierarchy queries.
+    \item Execute User Acceptance Testing (UAT) with real pastors and trainers.
+    \item Deploy on a staging environment and verify cloud infrastructure.
+    \item Finalize all thesis and user manual documentation.
+\end{itemize}
+\textbf{Milestone:} Production-ready application signed off by stakeholders and complete academic documentation.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth,keepaspectratio]{/Users/ntgr/Desktop/This.Mac/MYPROJECT/DONATHA_PROJECT/out/FR_NFR/proposal_nf_nfr/Work_Breakdown_Structure/Work_Breakdown_Structure.png}
+    \caption{Work Breakdown Structure (WBS)}
+\end{figure}
+
+Figure 2 visually outlines the project's Work Breakdown Structure (WBS), systematically decomposing the deployment of the Gitwe AMC platform into five manageable, sequential phases based on an Agile framework. Phase 1 focuses entirely on structural requirement extraction from physical church ledgers. Phase 2 focuses on mapping the massive Church hierarchy into an efficient DB Schema. Phase 3 divides the programming effort by isolating core modules (Authentication, the Hierarchy Record manager, and the Elder Training application). Phase 4 emphasizes rigorous Quality Assurance testing on the automated notification pipelines to ensure zero dropped messages between Union admins and local pastors. Finally, Phase 5 navigates production cloud deployment.
+
+\begin{landscape}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{/Users/ntgr/Desktop/This.Mac/MYPROJECT/DONATHA_PROJECT/out/FR_NFR/proposal_nf_nfr/Gantt_Chart/Gantt_Chart.png}
+    \caption{Project Scheduling Gantt Chart}
+\end{figure}
+\end{landscape}
+
+The Gantt chat presents the temporal execution strategy of the project mapped out across a targeted deployment window (March--July 2026). The development embraces overlapping sprint cycles to optimize labor allocation. Once early hierarchy logic is finalized, subsequent modules (like the Elder Training intake forms) are seamlessly built on top. Crucially, time is padded into the calendar to dedicate significant runway exclusively to User Acceptance Testing (UAT) and Integration Testing prior to launch, guaranteeing that the platform performs flawlessly as a reliable notification hub for localized pastors without bugs disrupting daily religious operations.
+
+\chapter{EXPECTED OUTCOMES}
+The implementation of the Gitwe AMC digital platform is expected to yield the following benefits:
+\begin{itemize}
+    \item A fully digitized, traceable record of all country pastors and their hierarchical responsibilities.
+    \item A centralized command structure capable of seamlessly scheduling, tracking, and distributing elder training resources.
+    \item A massive reduction in administrative overhead, eliminating up to 80\% of repetitive manual data entry.
+    \item Instantaneous generation of aggregate reports covering all tiers of the church structure.
+\end{itemize}
+
+\section{Expected Deliverables}
+The project will produce concrete deliverables demonstrating successful implementation:
+\begin{itemize}
+    \item \textbf{Fully Functional Web System:} An operational platform with role-based dashboards, hierarchy management, and elder training modules.
+    \item \textbf{Database Schema Definition:} An optimized, hierarchical relational database structure mapping the Union-Field-District-Church relationship.
+    \item \textbf{System Documentation:} Comprehensive guides including API references, a user manual for administrators, and setup instructions.
+    \item \textbf{Testing Reports:} Results from Integration and User Acceptance Testing (UAT) demonstrating system reliability.
+    \item \textbf{Final Academic Thesis:} The complete research document summarizing objectives, methodology, and final results.
+\end{itemize}
+
+\section{Potential Limitations}
+Potential limitations include a steep learning curve for older congregational leaders transitioning from paper-based systems, necessitating comprehensive user training. Furthermore, dependency on consistent internet access at the rural Local Church level may restrict real-time communication capabilities in certain geographic areas.
+
+\chapter{CONCLUSION}
+
+\section{Importance of the Project}
+The Integrated Digital Platform for Gitwe AMC addresses a critical administrative bottleneck within the Adventist Church hierarchy. Traditional paper-based management methods fail due to sluggish communication, repetitive data entry, and difficult cross-referencing capabilities. This project bridges the gap between modern digital data management and complex ecclesiastical organization by empowering the church with an intelligent, top-down platform. Ultimately, this enables significantly reduced overhead and flawless coordination of vital training initiatives across the nation.
+
+\section{Summary of the Plan}
+The project follows a structured 4-month development plan divided into sequential phases: Requirements Gathering, Database Implementation, Workflow Development, and Final Deployment. The architectural foundation uses a robust client-server paradigm relying on a relational database configured specifically for the one-to-many organizational structure extending from Unions down to Local Churches. Continuous Agile iteration will ensure that early feedback from targeted pastoral users refines the core capabilities.
+
+\section{Expected Outcomes}
+Upon completion, the system will deliver a production-ready application serving the administration with precise, secure, and rapid query capabilities. By transitioning archival and operational duties to this localized, multi-tiered digital ecosystem, the Gitwe AMC platform will significantly elevate the operational standard, streamline elder orchestration, and securely maintain the long-term heritage and administrative data of the institution.
+
+\chapter{REFERENCES}
+\begin{itemize}
+    \item Sommerville, I. (2015). \textit{Software Engineering} (10th ed.). Pearson.
+    \item Kendall, K. E., \& Kendall, J. E. (2013). \textit{Systems Analysis and Design} (9th ed.). Prentice Hall.
+    \item Additional academic and technical references specific to the implementation framework will be documented here in the final draft.
+\end{itemize}
+
+\chapter*{APPENDICES}
+\addcontentsline{toc}{chapter}{APPENDICES}
+
+\section*{Data Collection Letter}
+\addcontentsline{toc}{section}{Data Collection Letter}
+(A formal, signed institution letter requesting permission to collect administrative records from the Gitwe AMC offices will be inserted here in the physical copy.)
+
+\section*{Case Study Organization Approval Letter}
+\addcontentsline{toc}{section}{Case Study Organization Approval Letter}
+(An official countersigned letter from the Gitwe AMC administration recognizing this software engineering proposal and authorizing the development will be securely bound in the final submission.)
+
+\end{document}

@@ -1,0 +1,75 @@
+@startuml Traditional_Admin_Process
+' title <color:#2C3E50>Traditional Administrative Process Flow (AS-IS)</color>
+
+skinparam ResponseTimeTracker true
+
+' Core Typography and Sizing (For Maximum PDF Legibility)
+skinparam DefaultFontSize 24
+skinparam TitleFontSize 36
+skinparam ActivityPadding 15
+skinparam SwimlaneTitleFontSize 28
+skinparam Nodesep 60
+skinparam Ranksep 60
+
+' Modern Styling
+skinparam ActivityBackgroundColor #ECF0F1
+skinparam ActivityBorderColor #34495E
+skinparam ActivityDiamondBackgroundColor #F1C40F
+skinparam ActivityDiamondBorderColor #D35400
+skinparam NoteBackgroundColor #FCF3CF
+skinparam NoteBorderColor #F39C12
+skinparam ArrowColor #2980B9
+
+' Vibrant Swimlanes
+|#E8F6F3|Union Admin|
+|#EBF5FB|Field/District Pastor|
+|#FEF9E7|Local Church Clerk|
+|#FDEDEC|Member / Elder|
+
+|Member / Elder|
+start
+:Submit info/tithes\nphysically;
+
+|Local Church Clerk|
+:Manually record data\nin physical ledger;
+if (Data missing?) then (Yes)
+  #FADBD8:Leave record incomplete\n(Data Fragmented);
+else (No)
+endif
+:Compile monthly paper report;
+#FADBD8:Wait for physical transport\n(Days delayed);
+
+|Field/District Pastor|
+:Receive and sort\nlocal church reports;
+:Manually aggregate\nregional data;
+if (Inconsistencies found?) then (Yes)
+  #FADBD8:Call Local Clerk\nfor clarification;
+  note right: Takes 15-30 mins\ndue to physical searching
+  |Local Church Clerk|
+  #FADBD8:Search through\nphysical books;
+  #FADBD8:Provide verbal correction;
+  |Field/District Pastor|
+else (No)
+endif
+
+:Send aggregated report\nto Union Admin;
+
+|Union Admin|
+:Receive manual reports;
+#FADBD8:File in physical cabinets\n(No centralized DB);
+:Plan Elder Training Program;
+:Write formal memo\nfor training schedule;
+:Dispatch paper memo\nto Field Pastors;
+
+|Field/District Pastor|
+:Receive training memo;
+:Call or physically meet\nLocal Clerks / Elders;
+
+|Local Church Clerk|
+:Relay training details;
+
+|Member / Elder|
+:Receive informal /\nverbal notification;
+#FADBD8:Attend training\n(No formal tracking);
+stop
+@enduml

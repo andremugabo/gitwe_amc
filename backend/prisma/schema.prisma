@@ -1,0 +1,263 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  UNION_ADMIN
+  FIELD_SECRETARY
+  PASTOR
+  ELDER
+}
+
+enum MemberStatus {
+  ACTIVE
+  ARCHIVED
+  DECEASED
+}
+
+model User {
+  id               String       @id @default(uuid())
+  name             String
+  email            String       @unique
+  password         String
+  role             Role         @default(ELDER)
+  phone            String?
+  isVerified       Boolean      @default(false)
+  verificationCode String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Scoped locations
+  unionId          String?
+  union            Union?       @relation(fields: [unionId], references: [id])
+  fieldId          String?
+  field            Field?       @relation(fields: [fieldId], references: [id])
+  districtId       String?
+  district         District?    @relation(fields: [districtId], references: [id])
+  localChurchId    String?
+  localChurch      LocalChurch? @relation(fields: [localChurchId], references: [id])
+
+  // Relations
+  activities       Activity[]
+  enrollments      CourseEnrollment[]
+  attendance       CourseAttendance[]
+  notifications    Notification[]
+  recommendations  Recommendation[] @relation("PastorRecommendations")
+  recommendedBy    Recommendation[] @relation("ElderRecommendations")
+}
+
+model Union {
+  id        String   @id @default(uuid())
+  name      String
+  fields    Field[]
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Field {
+  id        String     @id @default(uuid())
+  name      String
+  unionId   String
+  union     Union      @relation(fields: [unionId], references: [id])
+  districts District[]
+  users     User[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model District {
+  id            String        @id @default(uuid())
+  name          String
+  fieldId       String
+  field         Field         @relation(fields: [fieldId], references: [id])
+  localChurches LocalChurch[]
+  users         User[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model LocalChurch {
+  id         String     @id @default(uuid())
+  name       String
+  districtId String
+  district   District   @relation(fields: [districtId], references: [id])
+  users      User[]
+  members    Member[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Member {
+  id             String       @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String?      @unique
+  phone          String?
+  gender         String?
+  dateOfBirth    DateTime?
+  address        String?
+  joinDate       DateTime     @default(now())
+  status         MemberStatus @default(ACTIVE)
+  
+  // Custom tracking
+  baptised       Boolean      @default(false)
+  baptismDate    DateTime?
+  married        Boolean      @default(false)
+  weddingDate    DateTime?
+  
+  // Scoped church
+  localChurchId  String?
+  localChurch    LocalChurch? @relation(fields: [localChurchId], references: [id])
+
+  // Relations
+  documents      Document[]
+  attendance     AttendanceRecord[]
+  tithes         TitheDetail[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  fileUrl      String   @unique
+  fileType     String   // e.g., "PDF", "IMAGE"
+  category     String?  // e.g., "BAPTISM_CERT", "OFFICIAL_LETTER"
+  uploadDate   DateTime @default(now())
+  
+  memberId     String?
+  member       Member?  @relation(fields: [memberId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AttendanceRecord {
+  id        String   @id @default(uuid())
+  date      DateTime @default(now())
+  isPresent Boolean  @default(true)
+  type      String?  // e.g., "Sabbath Service", "Prayer Meeting"
+  
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+}
+
+model TitheDetail {
+  id        String   @id @default(uuid())
+  amount    Float
+  date      DateTime @default(now())
+  type      String   @default("TITHE") // or "OFFERING", "BUILDING_FUND"
+  
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  action      String   // e.g., "MEMBER_REGISTERED", "DOCUMENT_UPLOADED"
+  description String?
+  timestamp   DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id          String             @id @default(uuid())
+  title       String
+  description String?
+  topics      String?            // Topic outline
+  location    String?
+  duration    String?            // Duration description e.g. "4 weeks"
+  startDate   DateTime?
+  endDate     DateTime?
+  materials   CourseMaterial[]
+  enrollments CourseEnrollment[]
+  sessions    CourseSession[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model CourseMaterial {
+  id        String   @id @default(uuid())
+  title     String
+  fileUrl   String
+  fileType  String   // "PDF", "LINK"
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseEnrollment {
+  id                 String    @id @default(uuid())
+  courseId           String
+  course             Course    @relation(fields: [courseId], references: [id])
+  elderId            String
+  elder              User      @relation(fields: [elderId], references: [id])
+  status             String    @default("ENROLLED") // "ENROLLED", "COMPLETED", "FAILED"
+  certificateUrl     String?
+  certificateQrCode  String?
+  certifiedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([courseId, elderId])
+}
+
+model CourseSession {
+  id         String             @id @default(uuid())
+  courseId   String
+  course     Course             @relation(fields: [courseId], references: [id])
+  date       DateTime           @default(now())
+  topic      String?
+  attendance CourseAttendance[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model CourseAttendance {
+  id        String        @id @default(uuid())
+  sessionId String
+  session   CourseSession @relation(fields: [sessionId], references: [id])
+  elderId   String
+  elder     User          @relation(fields: [elderId], references: [id])
+  isPresent Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([sessionId, elderId])
+}
+
+model Recommendation {
+  id         String   @id @default(uuid())
+  courseId   String?
+  courseName String
+  pastorId   String
+  pastor     User     @relation("PastorRecommendations", fields: [pastorId], references: [id])
+  elderId    String
+  elder      User     @relation("ElderRecommendations", fields: [elderId], references: [id])
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  title       String
+  message     String
+  type        String   @default("SYSTEM") // "SMS", "EMAIL", "SYSTEM"
+  status      String   @default("SENT")   // "SENT", "FAILED"
+  recipientId String
+  recipient   User     @relation(fields: [recipientId], references: [id])
+  createdAt   DateTime @default(now())
+}
