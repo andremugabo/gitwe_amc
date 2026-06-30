@@ -7,6 +7,7 @@ const documentRoutes = require('./routes/documentRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const hierarchyRoutes = require('./routes/hierarchyRoutes');
 const trainingRoutes = require('./routes/trainingRoutes');
+const { swaggerUi, swaggerSpec } = require('./utils/swagger');
 const path = require('path');
 
 dotenv.config();
@@ -24,6 +25,12 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/hierarchy', hierarchyRoutes);
 app.use('/api/training', trainingRoutes);
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Gitwe AMC API Docs'
+}));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
