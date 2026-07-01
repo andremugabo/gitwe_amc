@@ -23,16 +23,16 @@ dotenv.config();
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(helmet());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 200 : 5000, // limit each IP to 5000 requests per windowMs in dev
   message: { message: 'Too many requests from this IP, please try again later.' }
 });
 app.use('/api', limiter);
 
-app.use(cors());
 app.use(express.json());
 
 // Routes
