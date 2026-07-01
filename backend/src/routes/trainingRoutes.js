@@ -81,6 +81,9 @@ router.route('/')
  *     responses:
  *       200:
  *         description: List of recommendations with pastor and elder details
+ */
+router.get('/recommend/list', protect, getRecommendations);
+
 /**
  * @swagger
  * /training/materials:
@@ -94,8 +97,6 @@ router.route('/')
  *         description: List of course materials
  */
 router.get('/materials', protect, getCourseMaterials);
-
-router.get('/recommend/list', protect, getRecommendations);
 
 /**
  * @swagger
