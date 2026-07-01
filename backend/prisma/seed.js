@@ -2,11 +2,11 @@ const prisma = require('../src/utils/prisma');
 const bcrypt = require('bcryptjs');
 
 async function main() {
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  const fieldPassword = await bcrypt.hash('field123', 10);
-  const pastorPassword = await bcrypt.hash('pastor123', 10);
-  const elderPassword = await bcrypt.hash('elder123', 10);
-  const trainerPassword = await bcrypt.hash('trainer123', 10);
+  const hashedPassword = await bcrypt.hash('123', 10);
+  const fieldPassword = await bcrypt.hash('123', 10);
+  const pastorPassword = await bcrypt.hash('123', 10);
+  const elderPassword = await bcrypt.hash('123', 10);
+  const trainerPassword = await bcrypt.hash('123', 10);
 
   // 1. Seed Hierarchy
   console.log('Seeding locations hierarchy...');
