@@ -55,7 +55,7 @@ async function main() {
   // Union Admin
   const unionAdmin = await prisma.user.upsert({
     where: { email: 'union-admin@gitweamc.org' },
-    update: {},
+    update: { password: hashedPassword },
     create: {
       email: 'union-admin@gitweamc.org',
       name: 'Super Union Administrator',
@@ -69,7 +69,7 @@ async function main() {
   // Field Secretary
   const fieldSec = await prisma.user.upsert({
     where: { email: 'field-sec@gitweamc.org' },
-    update: {},
+    update: { password: fieldPassword },
     create: {
       email: 'field-sec@gitweamc.org',
       name: 'Jean Paul Field Secretary',
@@ -83,7 +83,7 @@ async function main() {
   // Pastor
   const pastor = await prisma.user.upsert({
     where: { email: 'pastor@gitweamc.org' },
-    update: {},
+    update: { password: pastorPassword },
     create: {
       email: 'pastor@gitweamc.org',
       name: 'Pastor Gatera Vincent',
@@ -97,7 +97,7 @@ async function main() {
   // Church Elder
   const elder = await prisma.user.upsert({
     where: { email: 'elder@gitweamc.org' },
-    update: {},
+    update: { password: elderPassword },
     create: {
       email: 'elder@gitweamc.org',
       name: 'Elder Gasana Silas',
@@ -111,7 +111,7 @@ async function main() {
   // Trainer
   const trainer = await prisma.user.upsert({
     where: { email: 'trainer@gitweamc.org' },
-    update: {},
+    update: { password: trainerPassword },
     create: {
       email: 'trainer@gitweamc.org',
       name: 'Dr. Kabera Jean Trainer',
