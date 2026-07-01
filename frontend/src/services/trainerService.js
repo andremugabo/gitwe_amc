@@ -6,6 +6,7 @@ const trainerService = {
   markAttendance: (data) => api.post('/trainer/attendance', data),
   createTest: (data) => api.post('/trainer/tests', data),
   getTestResults: () => api.get('/trainer/results'),
+  gradeTestResult: (resultId, data) => api.post(`/trainer/results/${resultId}/grade`, data),
   getEvaluations: () => api.get('/trainer/evaluations')
 };
 

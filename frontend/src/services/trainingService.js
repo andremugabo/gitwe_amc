@@ -23,7 +23,11 @@ const trainingService = {
   
   getNotifications: () => api.get('/training/notifications'),
 
-  getMaterials: () => api.get('/training/materials')
+  getMaterials: () => api.get('/training/materials'),
+
+  getTraineeTests: () => api.get('/training/tests/list'),
+
+  submitTest: (testId, data) => api.post(`/training/tests/${testId}/submit`, data)
 };
 
 export default trainingService;
