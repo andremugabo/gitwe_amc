@@ -11,6 +11,7 @@ export const getRoleDashboardPath = (role) => {
     case 'FIELD_SECRETARY': return '/dashboard/field-secretary';
     case 'PASTOR': return '/dashboard/pastor';
     case 'ELDER': return '/dashboard/elder';
+    case 'TRAINER': return '/dashboard/trainer';
     default: return '/login';
   }
 };
@@ -88,6 +89,14 @@ function App() {
                 path="/dashboard/elder" 
                 element={
                   <ProtectedRoute allowedRoles={['ELDER']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/trainer" 
+                element={
+                  <ProtectedRoute allowedRoles={['TRAINER']}>
                     <Dashboard />
                   </ProtectedRoute>
                 } 

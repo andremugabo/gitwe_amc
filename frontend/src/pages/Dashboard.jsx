@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
-import { Sidebar, Header, UnionAdminDashboard, FieldSecretaryDashboard, PastorDashboard, ElderDashboard } from '../components';
+import { Sidebar, Header, UnionAdminDashboard, FieldSecretaryDashboard, PastorDashboard, ElderDashboard, TrainerDashboard } from '../components';
 import { dashboardService } from '../services';
 import { Loader2 } from 'lucide-react';
 
@@ -85,6 +85,14 @@ const Dashboard = () => {
 
           {user.role === 'ELDER' && (
             <ElderDashboard 
+              activeTab={activeTab} 
+              stats={stats} 
+              refreshStats={fetchStats} 
+            />
+          )}
+
+          {user.role === 'TRAINER' && (
+            <TrainerDashboard 
               activeTab={activeTab} 
               stats={stats} 
               refreshStats={fetchStats} 

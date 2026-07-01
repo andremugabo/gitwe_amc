@@ -14,6 +14,7 @@ enum Role {
   FIELD_SECRETARY
   PASTOR
   ELDER
+  TRAINER
 }
 
 enum MemberStatus {
@@ -53,6 +54,8 @@ model User {
   recommendedBy    Recommendation[] @relation("ElderRecommendations")
   evaluations      Evaluation[]
   availabilities   Availability[]
+  trainerCourses   Course[]         @relation("TrainerCourses")
+  testResults      TestResult[]
 }
 
 model Union {
@@ -187,6 +190,9 @@ model Course {
   enrollments CourseEnrollment[]
   sessions    CourseSession[]
   evaluations Evaluation[]
+  trainerId   String?
+  trainer     User?              @relation("TrainerCourses", fields: [trainerId], references: [id])
+  tests       Test[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 }
@@ -294,5 +300,26 @@ model Availability {
   date      DateTime
   status    String   // e.g., "AVAILABLE", "BUSY"
   notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Test {
+  id          String       @id @default(uuid())
+  title       String
+  questions   String       // JSON structure string outlining questions
+  courseId    String
+  course      Course       @relation(fields: [courseId], references: [id])
+  results     TestResult[]
+  createdAt   DateTime     @default(now())
+}
+
+model TestResult {
+  id        String   @id @default(uuid())
+  testId    String
+  test      Test     @relation(fields: [testId], references: [id])
+  elderId   String
+  elder     User     @relation(fields: [elderId], references: [id])
+  score     Int
+  status    String   // "PASSED", "FAILED"
   createdAt DateTime @default(now())
 }

@@ -59,6 +59,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       { id: 'certificates', name: 'My Certificate', icon: Award },
       { id: 'evaluation', name: 'Evaluation', icon: Percent },
       { id: 'notifications', name: 'Notifications', icon: Bell }
+    ],
+    TRAINER: [
+      { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+      { id: 'trainer_courses', name: 'Assigned Courses', icon: BookOpen },
+      { id: 'attendance', name: 'Attendance Logger', icon: ClipboardList },
+      { id: 'prepare_tests', name: 'Prepare Tests', icon: FileText },
+      { id: 'evaluations', name: 'Course Evaluations', icon: Percent },
+      { id: 'profile', name: 'Profile', icon: User }
     ]
   };
 

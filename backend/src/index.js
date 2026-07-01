@@ -11,6 +11,7 @@ const { swaggerUi, swaggerSpec } = require('./utils/swagger');
 const faqRoutes = require('./routes/faqRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const availabilityRoutes = require('./routes/availabilityRoutes');
+const trainerRoutes = require('./routes/trainerRoutes');
 const path = require('path');
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api/training', trainingRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/trainer', trainerRoutes);
 
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

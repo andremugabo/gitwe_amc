@@ -6,6 +6,7 @@ async function main() {
   const fieldPassword = await bcrypt.hash('field123', 10);
   const pastorPassword = await bcrypt.hash('pastor123', 10);
   const elderPassword = await bcrypt.hash('elder123', 10);
+  const trainerPassword = await bcrypt.hash('trainer123', 10);
 
   // 1. Seed Hierarchy
   console.log('Seeding locations hierarchy...');
@@ -107,6 +108,24 @@ async function main() {
     }
   });
 
+  // Trainer
+  const trainer = await prisma.user.upsert({
+    where: { email: 'trainer@gitweamc.org' },
+    update: {},
+    create: {
+      email: 'trainer@gitweamc.org',
+      name: 'Dr. Kabera Jean Trainer',
+      password: trainerPassword,
+      role: 'TRAINER',
+      isVerified: true
+    }
+  });
+
+  // Link existing courses to the trainer
+  await prisma.course.updateMany({
+    data: { trainerId: trainer.id }
+  });
+
   // 3. Seed FAQs
   console.log('Seeding FAQs...');
   await prisma.faq.createMany({
@@ -137,7 +156,7 @@ async function main() {
   });
 
   console.log('Database seeding complete:');
-  console.log({ unionAdmin, fieldSec, pastor, elder });
+  console.log({ unionAdmin, fieldSec, pastor, elder, trainer });
 }
 
 main()

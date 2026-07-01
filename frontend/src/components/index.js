@@ -5,3 +5,4 @@ export { default as PastorDashboard } from './PastorDashboard';
 export { default as Sidebar } from './Sidebar';
 export { default as UnionAdminDashboard } from './UnionAdminDashboard';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as TrainerDashboard } from './TrainerDashboard';
