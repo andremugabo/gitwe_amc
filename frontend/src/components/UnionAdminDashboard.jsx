@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../context';
 import { trainingService, hierarchyService, authService, faqService, evaluationService, settingsService } from '../services';
 import { 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  Legend, 
+  CartesianGrid, 
+  AreaChart, 
+  Area, 
+  PieChart, 
+  Pie, 
+  Cell 
+} from 'recharts';
+import { 
   Users, 
   BookOpen, 
   Award, 
@@ -314,61 +329,89 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
             </div>
           </div>
 
-          {/* Quick Actions & Recent Activity */}
+          {/* Dynamic Enrollment Visualization Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-slate-800">Training Sessions Overview</h3>
-                <button 
-                  onClick={() => setShowCourseForm(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all"
-                >
-                  <Plus size={14} /> Schedule Session
-                </button>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 space-y-4 text-left">
+              <h3 className="font-bold text-slate-800 text-sm">Course Enrollment Distribution</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart 
+                    data={courses.map(c => ({
+                      name: c.title.length > 15 ? c.title.substring(0, 12) + '...' : c.title,
+                      Registered: c._count?.enrollments || 0
+                    }))} 
+                    margin={{ top: 20, right: 20, left: -20, bottom: 5 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: '#1e293b', color: '#fff', borderRadius: '8px', border: 'none' }} />
+                    <Area type="monotone" dataKey="Registered" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorReg)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-
-              {courses.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-6">No scheduled training courses available.</p>
-              ) : (
-                <div className="space-y-3">
-                  {courses.slice(0, 3).map(c => (
-                    <div key={c.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
-                      <div>
-                        <h4 className="font-semibold text-slate-800 text-sm">{c.title}</h4>
-                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                          <Calendar size={12} /> {c.duration} | Location: {c.location}
-                        </p>
-                      </div>
-                      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] uppercase font-bold">
-                        ACTIVE
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
-              <h3 className="font-bold text-slate-800">Quick Reports</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    const csvContent = "data:text/csv;charset=utf-8,ID,Name,Email,Role\n" + 
-                      users.map(u => `"${u.id}","${u.name}","${u.email}","${u.role}"`).join("\n");
-                    const encodedUri = encodeURI(csvContent);
-                    const link = document.createElement("a");
-                    link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", "system_wide_leaders_export.csv");
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl text-left transition-all"
-                >
-                  <span className="text-xs font-semibold text-slate-700">Export Leaders Registry (CSV)</span>
-                  <Download size={16} className="text-slate-400" />
-                </button>
+            {/* Quick Actions & Active Sessions column */}
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-slate-800 text-sm">Active Curriculums</h3>
+                  <button 
+                    onClick={() => setShowCourseForm(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition-all"
+                  >
+                    <Plus size={12} /> Schedule
+                  </button>
+                </div>
+
+                {courses.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-6">No scheduled courses.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {courses.slice(0, 2).map(c => (
+                      <div key={c.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-800 text-xs truncate">{c.title}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{c.duration || 'TBD'}</p>
+                        </div>
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[9px] uppercase font-bold shrink-0">
+                          ACTIVE
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Actions / Reports */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 text-left">
+                <h3 className="font-bold text-slate-800 text-sm">Quick Reports</h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      const csvContent = "data:text/csv;charset=utf-8,ID,Name,Email,Role\n" + 
+                        users.map(u => `"${u.id}","${u.name}","${u.email}","${u.role}"`).join("\n");
+                      const encodedUri = encodeURI(csvContent);
+                      const link = document.createElement("a");
+                      link.setAttribute("href", encodedUri);
+                      link.setAttribute("download", "system_wide_leaders_export.csv");
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl text-left transition-all"
+                  >
+                    <span className="text-[11px] font-semibold text-slate-700">Export Leaders Registry</span>
+                    <Download size={14} className="text-slate-400" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -535,49 +578,100 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Evaluations Overview */}
-            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
-              <h4 className="font-bold text-slate-800 text-sm">Evaluation Ratings (Averages)</h4>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1">
-                    <span>Course Content Value</span>
-                    <span>4.7 / 5</span>
+            {/* Dynamic Recharts Evaluations Averages */}
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 text-left">
+              <h4 className="font-bold text-slate-800 text-sm">Evaluation Ratings (Database Averages)</h4>
+              
+              {(() => {
+                const totalEvals = evaluations.length;
+                const avgContent = totalEvals > 0 ? (evaluations.reduce((sum, e) => sum + e.contentRating, 0) / totalEvals).toFixed(1) : '0.0';
+                const avgTeacher = totalEvals > 0 ? (evaluations.reduce((sum, e) => sum + e.teacherRating, 0) / totalEvals).toFixed(1) : '0.0';
+                const avgMaterials = totalEvals > 0 ? (evaluations.reduce((sum, e) => sum + e.materialsRating, 0) / totalEvals).toFixed(1) : '0.0';
+
+                const evalChartData = [
+                  { name: 'Course Content', Rating: parseFloat(avgContent) },
+                  { name: 'Teacher Quality', Rating: parseFloat(avgTeacher) },
+                  { name: 'Study Materials', Rating: parseFloat(avgMaterials) }
+                ];
+
+                return (
+                  <div className="space-y-4">
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={evalChartData} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <YAxis domain={[0, 5]} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ background: '#1e293b', color: '#fff', borderRadius: '8px', border: 'none' }} />
+                          <Bar dataKey="Rating" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-200">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400">CONTENT</p>
+                        <p className="text-sm font-bold text-slate-800">{avgContent} / 5.0</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400">TEACHER</p>
+                        <p className="text-sm font-bold text-slate-800">{avgTeacher} / 5.0</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400">MATERIALS</p>
+                        <p className="text-sm font-bold text-slate-800">{avgMaterials} / 5.0</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full" style={{ width: '94%' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1">
-                    <span>Instructors & Lecturers</span>
-                    <span>4.5 / 5</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full" style={{ width: '90%' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1">
-                    <span>Class Study Materials</span>
-                    <span>4.8 / 5</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full" style={{ width: '96%' }}></div>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
-            {/* Program Completion stats */}
-            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between">
+            {/* Dynamic Recharts Program Completion (Pie Chart) */}
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between text-left">
               <div>
                 <h4 className="font-bold text-slate-800 text-sm mb-2">Completion & Verification Stats</h4>
-                <p className="text-xs text-slate-500">Certified Elders: {stats?.metrics?.completedEnrollments || 0}</p>
-                <p className="text-xs text-slate-500 mt-1">Pending Course Completion: {(stats?.metrics?.totalEnrollments || 0) - (stats?.metrics?.completedEnrollments || 0)}</p>
+                {(() => {
+                  const certifiedCount = stats?.metrics?.completedEnrollments || 0;
+                  const pendingCount = Math.max(0, (stats?.metrics?.totalEnrollments || 0) - certifiedCount);
+                  
+                  const completionChartData = [
+                    { name: 'Certified', value: certifiedCount },
+                    { name: 'Pending', value: pendingCount }
+                  ];
+                  const COLORS = ['#10b981', '#cbd5e1'];
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="h-48 flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={completionChartData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={45}
+                              outerRadius={65}
+                              paddingAngle={4}
+                              dataKey="value"
+                            >
+                              {completionChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: 10 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="text-[11px] text-slate-500 text-center font-medium">
+                        Total Enrolled: {stats?.metrics?.totalEnrollments || 0} (Certified: {certifiedCount} | Pending: {pendingCount})
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
-              <div className="pt-4 border-t border-slate-200/50 mt-4 text-xs text-slate-400 flex items-center gap-1.5">
-                <ShieldCheck size={16} className="text-emerald-500" />
+              <div className="pt-4 border-t border-slate-200/50 mt-4 text-[10px] font-medium text-slate-400 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-emerald-500" />
                 All issued certificates carry unique cryptographic validation hashes.
               </div>
             </div>

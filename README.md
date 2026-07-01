@@ -10,8 +10,9 @@ Welcome to the **Gitwe Ministerial Centre (Gitwe AMC)** Digital Platform. This s
 - **Framework:** React 19 (JavaScript / ES6+)
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS (Vanilla responsive utility styles)
+- **Data Visualizations:** Recharts (Dynamic Bar, Area, and Pie charts displaying real-time metrics from the database)
 - **Icons:** Lucide React
-- **HTTP Client:** Axios (Integrated with dynamic JWT request headers and a global `401` session-expiry auto-redirect interceptor)
+- **HTTP Client:** Axios (Integrated with dynamic JWT request headers, global error toaster, and a 401 session-expiry auto-redirect interceptor)
 - **i18n Multilingual Support:** Custom context provider implementing English (`en`), Kinyarwanda (`kin`), and French (`fr`) mappings
 
 ### Backend
@@ -19,7 +20,8 @@ Welcome to the **Gitwe Ministerial Centre (Gitwe AMC)** Digital Platform. This s
 - **Server Framework:** Express
 - **ORM:** Prisma
 - **Database:** PostgreSQL (Scoped permissions matching union, field, district, and church levels)
-- **Security:** bcryptjs (Password hashing) & JSON Web Tokens (JWT authentication)
+- **Real-Time Features:** Native WebSockets server (Chat, instant push notifications)
+- **Security:** bcryptjs (Password hashing), JSON Web Tokens (JWT authentication), Helmet (HTTP security headers), and Express Rate Limiters (DDoS guards)
 - **Documentation:** Swagger (Auto-scans routes to serve interactive specs at `/api-docs`)
 
 ---
@@ -32,17 +34,17 @@ DONATHA_PROJECT/
 ├── backend/              # Node.js Express server
 │   ├── prisma/           # Prisma schemas, migrations, and seed scripts
 │   └── src/
-│       ├── controllers/  # API endpoint logic (auth, training, members, etc.)
-│       ├── middleware/   # JWT authorization, upload handlers
+│       ├── controllers/  # API endpoint logic (auth, training, members, settings, etc.)
+│       ├── middleware/   # JWT authorization, security checkers, error handlers
 │       ├── routes/       # Express Router mappings with Swagger descriptions
-│       ├── utils/        # Swagger configs, Prisma client initializers
+│       ├── utils/        # Swagger configs, Prisma client initializers, WebSockets
 │       └── index.js      # Server entry point
 ├── frontend/             # React application
+│   ├── public/           # Manifest.json, sw.js (PWA service worker)
 │   └── src/
 │       ├── api/          # Axios configurations and 401 interceptors
-│       ├── components/   # Dashboard widgets (Elder, Pastor, Union, Secretary)
-│       │   └── ui/       # Primitive UI elements (Button, Input, Modal, badges)
-│       ├── context/      # AuthContext & LanguageContext (i18n Translation)
+│       ├── components/   # Dashboard widgets (Elder, Pastor, Union Admin, Field Secretary, Trainer)
+│       ├── context/      # AuthContext & LanguageContext & WebSocketContext
 │       ├── pages/        # Main route views (Login, Register, ResetPassword, Dashboard)
 │       └── services/     # Decoupled API service layers (Service Pattern abstraction)
 └── README.md             # Project roadmap & information (This file)
@@ -54,69 +56,76 @@ DONATHA_PROJECT/
 
 ### Prerequisites
 - Node.js (v18+)
-- PostgreSQL database instance
+- PostgreSQL database instance (running on port `5432` with a database named `gitwedb`)
 
-### 1. Backend Configuration
-1. Navigate to the backend directory:
+### 1. Database & Backend Configuration
+
+1. **Verify PostgreSQL is running** and that a database named `gitwedb` exists.
+2. **Navigate to the backend directory**:
    ```bash
    cd backend
    ```
-2. Install dependencies:
+3. **Install dependencies**:
    ```bash
    npm install
    ```
-3. Create a `.env` file from the environment template and define your configuration:
+4. **Create a `.env` file** and define your configuration:
    ```env
    PORT=5001
-   DATABASE_URL="postgresql://username:password@localhost:5432/gitwe_amc"
-   JWT_SECRET="your_secure_jwt_secret_token"
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gitwedb"
+   JWT_SECRET="supersecretkey123"
    
    # Gmail SMTP Configuration
-   EMAIL_USER="your_gmail_address@gmail.com"
-   EMAIL_PASS="your_gmail_app_password" # 16-character code from App Passwords
+   EMAIL_USER="donatha.25874@auca.ac.rw"
+   EMAIL_PASS="ukyl yhhg lxzz fvhk"
    ```
-4. Run migrations and seed the database hierarchy:
+5. **Run migrations to initialize the schema**:
    ```bash
-   npx prisma migrate dev
+   npx prisma migrate dev --name init_platform
+   ```
+6. **Seed the database with hierarchy, users, FAQs, and settings**:
+   ```bash
    node prisma/seed.js
    ```
-5. Start the development server using nodemon:
+7. **Start the development server**:
    ```bash
    npm run dev
    ```
    *The server runs on port `5001`. Swagger documentation is available at `http://localhost:5001/api-docs`.*
 
 ### 2. Frontend Configuration
-1. Navigate to the frontend directory:
+
+1. **Navigate to the frontend directory**:
    ```bash
    cd ../frontend
    ```
-2. Install dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
-3. Run the client development server:
+3. **Run the client development server**:
    ```bash
    npm run dev
    ```
-   *The application will open at `http://localhost:5173` (or the local port specified by Vite).*
+   *The application will open at `http://localhost:3000` (or another port specified by Vite).*
 
 ---
 
 ## 🔑 Seeding / Demo Credentials
-To log in immediately, utilize the following seeded credentials matching church administrative hierarchy scopes:
+To log in immediately, utilize the following seeded credentials:
 
 | Role | Username / Email | Password | Scope Access |
 |---|---|---|---|
-| **Union Administrator** | `unionadmin@gitwe.org` | `password123` | Global training schedule, data export, certificates |
-| **Field Secretary** | `fieldsec@gitwe.org` | `password123` | Local field registrations, attendance checks |
-| **Pastor** | `pastor@gitwe.org` | `password123` | District oversight, elder training recommendations |
-| **Church Elder** | `elder@gitwe.org` | `password123` | Trainee dashboard, study materials, digital certificates |
+| **Union Administrator** | `union-admin@gitweamc.org` | `admin123` | Global training schedule, settings, data exports, certificates |
+| **Field Secretary** | `field-sec@gitweamc.org` | `field123` | Scoped field registrations, elder database access |
+| **Pastor** | `pastor@gitweamc.org` | `pastor123` | Scoped district approvals, elder recommendations, chats |
+| **Trainer / Lecturer** | `trainer@gitweamc.org` | `trainer123` | Attendance registries, test score inputs, course reviews |
+| **Church Elder** | `elder@gitweamc.org` | `elder123` | Trainee portal, class materials downloads, digital certificates |
 
 ---
 
-## 🌍 Multilingual Integration (Kinyarwanda, English, French)
-The language can be toggled instantly from the dropdown inside the application header. Selecting a language:
-- Persists user preferences inside the browser's `localStorage`.
-- Dynamically translates authentication views, inputs, page metrics cards, navigation bars, and error strings.
-- Gracefully falls back to English keys if Kinyarwanda or French values are missing.
+## 🛡️ Production & Performance Capabilities
+
+1. **PWA Integration**: The application acts as a Progressive Web App. A service worker `sw.js` is registered to cache static content for instant offline availability.
+2. **Auto-Logout Security**: If a user is inactive (no cursor moves, typing, clicks) for **1 minute**, the system automatically logs them out to secure their session.
+3. **Centralized Toaster**: All error alerts, server successes, network issues, and WebSocket announcements route through a centralized, event-driven floating toast utility.
