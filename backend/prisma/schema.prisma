@@ -51,6 +51,8 @@ model User {
   notifications    Notification[]
   recommendations  Recommendation[] @relation("PastorRecommendations")
   recommendedBy    Recommendation[] @relation("ElderRecommendations")
+  evaluations      Evaluation[]
+  availabilities   Availability[]
 }
 
 model Union {
@@ -184,6 +186,7 @@ model Course {
   materials   CourseMaterial[]
   enrollments CourseEnrollment[]
   sessions    CourseSession[]
+  evaluations Evaluation[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 }
@@ -260,4 +263,36 @@ model Notification {
   recipientId String
   recipient   User     @relation(fields: [recipientId], references: [id])
   createdAt   DateTime @default(now())
+}
+
+model Faq {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Evaluation {
+  id              String   @id @default(uuid())
+  elderId         String
+  elder           User     @relation(fields: [elderId], references: [id])
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id])
+  contentRating   Int
+  teacherRating   Int
+  materialsRating Int
+  comments        String?
+  createdAt       DateTime @default(now())
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  pastorId  String
+  pastor    User     @relation(fields: [pastorId], references: [id])
+  date      DateTime
+  status    String   // e.g., "AVAILABLE", "BUSY"
+  notes     String?
+  createdAt DateTime @default(now())
 }

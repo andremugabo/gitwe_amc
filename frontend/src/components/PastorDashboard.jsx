@@ -1,26 +1,44 @@
 import { useState, useEffect } from 'react';
-import { trainingService, memberService, authService } from '../services';
+import { useAuth } from '../context';
+import { trainingService, authService, availabilityService, hierarchyService } from '../services';
 import { 
   Users, 
   ThumbsUp, 
   Award, 
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  UserPlus,
+  Send,
+  MessageSquare,
+  Plus,
+  Bell
 } from 'lucide-react';
 
 const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
+  const { user } = useAuth();
   const [elders, setElders] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [courses, setCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [availabilities, setAvailabilities] = useState([]);
+  const [localChurches, setLocalChurches] = useState([]);
 
   // Form states
   const [showRecForm, setShowRecForm] = useState(false);
   const [recForm, setRecForm] = useState({
-    courseName: '',
-    elderId: '',
-    notes: ''
+    courseName: '', elderId: '', notes: ''
   });
+
+  const [availForm, setAvailForm] = useState({
+    date: '', status: 'AVAILABLE', notes: ''
+  });
+  const [showAvailForm, setShowAvailForm] = useState(false);
+
+  const [registerForm, setRegisterForm] = useState({
+    name: '', email: '', password: '', phone: '', localChurchId: ''
+  });
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -33,18 +51,29 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const fetchData = async () => {
     try {
       const { data: membersData } = await authService.getUsers({ role: 'ELDER' });
-      // Pastor sees elders under their local church / district scope
       setElders(membersData);
 
       const { data: coursesData } = await trainingService.getCourses();
       setCourses(coursesData);
 
-      if (activeTab === 'recommend' || activeTab === 'dashboard') {
+      if (activeTab === 'dashboard' || activeTab === 'registrations') {
         const { data: recsData } = await trainingService.getRecommendations();
         setRecommendations(recsData);
       }
 
-      if (activeTab === 'notifications') {
+      if (activeTab === 'availability') {
+        const { data } = await availabilityService.getAvailability();
+        setAvailabilities(data);
+      }
+
+      if (activeTab === 'register_elder') {
+        const { data } = await hierarchyService.getHierarchy();
+        // Filter churches that belong to this pastor's districtId
+        const districtChurches = data.localChurches.filter(c => c.districtId === user?.districtId);
+        setLocalChurches(districtChurches);
+      }
+
+      if (activeTab === 'communication') {
         const { data } = await trainingService.getNotifications();
         setNotifications(data);
       }
@@ -67,6 +96,47 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
       fetchData();
     } catch (err) {
       setError(err.response?.data?.message || 'Recommendation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvailSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await availabilityService.setAvailability(availForm);
+      setMessage('Availability calendar record logged successfully!');
+      setAvailForm({ date: '', status: 'AVAILABLE', notes: '' });
+      setShowAvailForm(false);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to log availability');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleElderRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await authService.register({
+        ...registerForm,
+        role: 'ELDER',
+        districtId: user?.districtId,
+        isVerified: true
+      });
+      setMessage('Elder registered successfully!');
+      setRegisterForm({ name: '', email: '', password: '', phone: '', localChurchId: '' });
+      setShowRegisterForm(false);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to register elder');
     } finally {
       setLoading(false);
     }
@@ -107,17 +177,17 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
               </div>
               <div>
                 <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Recommendations</p>
-                <h3 className="text-2xl font-bold text-slate-800 mt-1">{recommendations.length}</h3>
+                <h3 className="text-2xl font-bold text-slate-800 mt-1">{recommendations.length} Active</h3>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200 flex items-center gap-5">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
                 <Award size={24} />
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Elders Certified</p>
-                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.completedEnrollments}</h3>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Programs</p>
+                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.totalCourses} Scheduled</h3>
               </div>
             </div>
           </div>
@@ -125,49 +195,37 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-slate-800">Supervised Elders</h3>
+                <h3 className="font-bold text-slate-800">Supervised Elders Directory</h3>
                 <button
                   onClick={() => setShowRecForm(true)}
-                  className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all"
                 >
-                  <ThumbsUp size={14} /> Recommend Elder
+                  Recommend for Training
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold">
-                      <th className="py-2.5">Elder Name</th>
-                      <th className="py-2.5">Email</th>
-                      <th className="py-2.5">Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 text-slate-700">
-                    {elders.slice(0, 3).map(el => (
-                      <tr key={el.id}>
-                        <td className="py-3 font-semibold">{el.name || el.firstName}</td>
-                        <td className="py-3 text-slate-500">{el.email || 'N/A'}</td>
-                        <td className="py-3 text-slate-500">{el.phone || 'N/A'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
-              <h3 className="font-bold text-slate-800">Recent Recommendations</h3>
-              {recommendations.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-xl">No active recommendations.</p>
+              {elders.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-6">No elders registered in your district.</p>
               ) : (
-                <div className="space-y-2">
-                  {recommendations.slice(0, 3).map(r => (
-                    <div key={r.id} className="p-3 bg-slate-50 border border-slate-200/50 rounded-xl text-xs">
-                      <div className="font-semibold text-slate-800">Elder: {r.elder?.name}</div>
-                      <div className="text-slate-400 text-[10px] mt-0.5">Course: {r.courseName}</div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
+                        <th className="py-2 px-3">Name</th>
+                        <th className="py-2 px-3">Email</th>
+                        <th className="py-2 px-3">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 text-sm">
+                      {elders.map(e => (
+                        <tr key={e.id}>
+                          <td className="py-2 px-3 font-medium text-slate-800">{e.name}</td>
+                          <td className="py-2 px-3 text-slate-500">{e.email}</td>
+                          <td className="py-2 px-3 text-slate-500">{e.phone || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -175,102 +233,149 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
-      {/* Tab: Elders List */}
-      {activeTab === 'elders' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
-          <div>
-            <h3 className="font-bold text-slate-800 text-lg">My Elders Registry</h3>
-            <p className="text-xs text-slate-400">View profiles and training details of elders under your pastoral care.</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
-                  <th className="py-3 px-4">Name</th>
-                  <th className="py-3 px-4">Email</th>
-                  <th className="py-3 px-4">Phone</th>
-                  <th className="py-3 px-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {elders.map(e => (
-                  <tr key={e.id} className="hover:bg-slate-50">
-                    <td className="py-3 px-4 font-semibold text-slate-800">{e.name || e.firstName}</td>
-                    <td className="py-3 px-4 text-slate-500">{e.email || 'N/A'}</td>
-                    <td className="py-3 px-4 text-slate-500">{e.phone || 'N/A'}</td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => {
-                          setRecForm({ ...recForm, elderId: e.id });
-                          setShowRecForm(true);
-                        }}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                      >
-                        Recommend
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Recommend Elder */}
-      {activeTab === 'recommend' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+      {/* Tab: Availability Check */}
+      {activeTab === 'availability' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="font-bold text-slate-800 text-lg">Elder Recommendations Panel</h3>
-              <p className="text-xs text-slate-400 font-medium">Recommending your local elders to Union-wide programs.</p>
+              <h3 className="font-bold text-slate-800 text-lg">Availability Check Calendar</h3>
+              <p className="text-xs text-slate-400">Manage and schedule availability windows for elder reviews.</p>
             </div>
             <button
-              onClick={() => setShowRecForm(true)}
+              onClick={() => setShowAvailForm(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
             >
-              <ThumbsUp size={16} /> Recommend Elder
+              <Plus size={16} /> Log Availability
             </button>
           </div>
 
-          <div className="space-y-4">
-            {recommendations.map(r => (
-              <div key={r.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center gap-4 text-sm">
-                <div>
-                  <h4 className="font-bold text-slate-800">{r.elder?.name}</h4>
-                  <p className="text-xs text-slate-500">Program: {r.courseName} | Notes: "{r.notes || 'None'}"</p>
+          {availabilities.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No availability records scheduled.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {availabilities.map(av => (
+                <div key={av.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-400">{new Date(av.date).toLocaleDateString()}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      av.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'
+                    }`}>
+                      {av.status}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-800">Pastor Availability Slot</p>
+                  {av.notes && <p className="text-xs text-slate-500">"{av.notes}"</p>}
                 </div>
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-100 rounded text-xs font-semibold">
-                  Submitted
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Tab: Notifications */}
-      {activeTab === 'notifications' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+      {/* Tab: Register Elder */}
+      {activeTab === 'register_elder' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left max-w-lg">
           <div>
-            <h3 className="font-bold text-slate-800 text-lg">Notifications Log</h3>
-            <p className="text-xs text-slate-400 font-medium">Verify system alerts and course recommendations feed.</p>
+            <h3 className="font-bold text-slate-800 text-lg">Register Local Church Elder</h3>
+            <p className="text-xs text-slate-400">Configure a new elder system login within your district care scope.</p>
           </div>
 
-          {notifications.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No system notifications found.</p>
+          <form onSubmit={handleElderRegister} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600">Full Name</label>
+              <input 
+                type="text"
+                required
+                value={registerForm.name}
+                onChange={e => setRegisterForm({ ...registerForm, name: e.target.value })}
+                placeholder="Elder Habimana Silas"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Email</label>
+                <input 
+                  type="email"
+                  required
+                  value={registerForm.email}
+                  onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })}
+                  placeholder="elder@domain.com"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Password</label>
+                <input 
+                  type="password"
+                  required
+                  value={registerForm.password}
+                  onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Phone</label>
+                <input 
+                  type="text"
+                  value={registerForm.phone}
+                  onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                  placeholder="0788123456"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Scoped Local Church</label>
+                <select 
+                  required
+                  value={registerForm.localChurchId}
+                  onChange={e => setRegisterForm({ ...registerForm, localChurchId: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                >
+                  <option value="">-- Select Local Church --</option>
+                  {localChurches.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="py-2.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md"
+            >
+              {loading ? 'Registering...' : 'Register Elder'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Tab: My Registrations */}
+      {activeTab === 'registrations' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg">My District Registrations</h3>
+            <p className="text-xs text-slate-400">Audit course registration recommendations made within your pastoral care.</p>
+          </div>
+
+          {recommendations.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No recommendations submitted yet.</p>
           ) : (
             <div className="space-y-3">
-              {notifications.map(n => (
-                <div key={n.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start gap-4">
-                  <div className="space-y-0.5">
-                    <h4 className="font-bold text-slate-800 text-sm">{n.title}</h4>
-                    <p className="text-xs text-slate-500">{n.message}</p>
-                    <p className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleString()}</p>
+              {recommendations.map(r => (
+                <div key={r.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold text-slate-800 text-sm">Recommended Elder: {r.elder?.name}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Program: {r.courseName} | Notes: "{r.notes || 'None'}"</p>
                   </div>
-                  <span className="px-2 py-0.5 bg-slate-200/50 text-slate-600 rounded text-[9px] uppercase font-bold">
-                    {n.type}
+                  <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-100 rounded-full text-[10px] uppercase font-bold">
+                    RECOMMENDED
                   </span>
                 </div>
               ))}
@@ -279,39 +384,79 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
-      {/* MODAL: Recommend Elder */}
+      {/* Tab: Communication Page */}
+      {activeTab === 'communication' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg">Communication Center</h3>
+            <p className="text-xs text-slate-400 font-medium">Verify system alerts and notification logs sent to elders.</p>
+          </div>
+
+          {notifications.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No notification logs recorded.</p>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map(n => (
+                <div key={n.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                  <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Bell size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800 text-sm">{n.title}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">{n.message}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Account Profile */}
+      {activeTab === 'profile' && (
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 max-w-md text-left space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-2xl">
+              P
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg">{user?.name}</h3>
+              <p className="text-xs text-slate-400">Pastor | Gitwe District Care Level</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="p-3 bg-slate-50 rounded-xl flex justify-between">
+              <span className="font-semibold text-slate-500">Email:</span>
+              <span className="text-slate-800 font-medium">{user?.email}</span>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl flex justify-between">
+              <span className="font-semibold text-slate-500">District ID:</span>
+              <span className="text-slate-800 font-medium truncate max-w-[200px]">{user?.districtId || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Recommendation Form */}
       {showRecForm && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden text-left">
             <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
-              <h3 className="font-bold text-base">Recommend Elder for Course</h3>
+              <h3 className="font-bold text-base">Recommend Elder</h3>
               <button onClick={() => setShowRecForm(false)} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
             </div>
             <form onSubmit={handleRecommend} className="p-6 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">Select Church Elder</label>
-                <select
-                  required
-                  value={recForm.elderId}
-                  onChange={(e) => setRecForm({ ...recForm, elderId: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none"
-                >
-                  <option value="">-- Select Elder --</option>
-                  {elders.map(el => (
-                    <option key={el.id} value={el.id}>{el.name || el.firstName}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">Select Course Program</label>
+                <label className="text-xs font-semibold text-slate-600">Program Course</label>
                 <select
                   required
                   value={recForm.courseName}
                   onChange={(e) => setRecForm({ ...recForm, courseName: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none"
+                  className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
                 >
-                  <option value="">-- Select Course --</option>
+                  <option value="">-- Select Program --</option>
                   {courses.map(c => (
                     <option key={c.id} value={c.title}>{c.title}</option>
                   ))}
@@ -319,21 +464,91 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">Recommendation Notes</label>
+                <label className="text-xs font-semibold text-slate-600">Select Elder</label>
+                <select
+                  required
+                  value={recForm.elderId}
+                  onChange={(e) => setRecForm({ ...recForm, elderId: e.target.value })}
+                  className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                >
+                  <option value="">-- Select Elder --</option>
+                  {elders.map(el => (
+                    <option key={el.id} value={el.id}>{el.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Pastor Recommendation Notes</label>
                 <textarea
                   value={recForm.notes}
                   onChange={(e) => setRecForm({ ...recForm, notes: e.target.value })}
-                  placeholder="Reasons for recommendation..."
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm h-20"
+                  placeholder="Notes about suitability, completed preparatory studies..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm h-24 focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all"
+                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
               >
                 {loading ? 'Submitting...' : 'Submit Recommendation'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Availability Form */}
+      {showAvailForm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden text-left">
+            <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
+              <h3 className="font-bold text-base">Log Availability Slot</h3>
+              <button onClick={() => setShowAvailForm(false)} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+            <form onSubmit={handleAvailSubmit} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Date</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={availForm.date}
+                  onChange={(e) => setAvailForm({ ...availForm, date: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Status</label>
+                <select
+                  value={availForm.status}
+                  onChange={(e) => setAvailForm({ ...availForm, status: e.target.value })}
+                  className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                >
+                  <option value="AVAILABLE">AVAILABLE</option>
+                  <option value="BUSY">BUSY</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Availability notes</label>
+                <input
+                  type="text"
+                  value={availForm.notes}
+                  onChange={(e) => setAvailForm({ ...availForm, notes: e.target.value })}
+                  placeholder="Prepare reviews materials"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
+              >
+                {loading ? 'Submitting...' : 'Log Availability'}
               </button>
             </form>
           </div>

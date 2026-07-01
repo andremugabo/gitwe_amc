@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { trainingService } from '../services';
+import { trainingService, evaluationService } from '../services';
 import { 
   BookOpen, 
   Award, 
   Download, 
-  CheckSquare,
-  Edit
+  AlertCircle,
+  CheckCircle2,
+  Share2,
+  Percent,
+  Copy,
+  Check,
+  Bell
 } from 'lucide-react';
 
 const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
@@ -17,13 +22,19 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Profile Form
-  const [profileForm, setProfileForm] = useState({ name: '', phone: '' });
-  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Selected certificate preview
   const [activeCert, setActiveCert] = useState(null);
+
+  // Evaluation form state
+  const [evalForm, setEvalForm] = useState({
+    courseId: '',
+    contentRating: 5,
+    teacherRating: 5,
+    materialsRating: 5,
+    comments: ''
+  });
 
   useEffect(() => {
     fetchData();
@@ -42,10 +53,9 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
       const { data: coursesData } = await trainingService.getCourses();
       const allMaterials = [];
       coursesData.forEach(c => {
-        // Mock materials lists if empty
         allMaterials.push({
           id: `mat-${c.id}`,
-          title: `Study Material for ${c.title}`,
+          title: `Study Slide Deck for ${c.title}`,
           fileType: 'PDF',
           courseTitle: c.title
         });
@@ -61,23 +71,34 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
     }
   };
 
-  const handleProfileUpdate = async (e) => {
+  const handleEvalSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setMessage('');
+
+    if (!evalForm.courseId) {
+      setError('Please select a course to evaluate.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const updatedUser = { ...userInfo, name: profileForm.name, phone: profileForm.phone };
-      localStorage.setItem('userInfo', JSON.stringify(updatedUser));
-      setMessage('Profile details updated successfully!');
-      setShowProfileForm(false);
-      refreshStats();
+      await evaluationService.submitEvaluation(evalForm);
+      setMessage('Thank you! Your training evaluation feedback has been submitted successfully.');
+      setEvalForm({ courseId: '', contentRating: 5, teacherRating: 5, materialsRating: 5, comments: '' });
     } catch (err) {
-      setError('Failed to update profile');
+      setError(err.response?.data?.message || 'Failed to submit evaluation.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopyLink = (code) => {
+    const shareUrl = `${window.location.origin}/verify-certificate?code=${code}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -104,8 +125,8 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
                 <BookOpen size={24} />
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Enrolled Courses</p>
-                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.totalEnrollments}</h3>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">My Courses</p>
+                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.totalEnrollments} Registered</h3>
               </div>
             </div>
 
@@ -115,95 +136,69 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
               </div>
               <div>
                 <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Completed Trainings</p>
-                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.completedEnrollments}</h3>
+                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.completedEnrollments} Verified</h3>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200 flex items-center gap-5">
-              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
                 <CheckSquare size={24} />
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Attendance Rate</p>
-                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.metrics.attendanceRate}%</h3>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Attendance</p>
+                <h3 className="text-2xl font-bold text-slate-800 mt-1">{attendance.length} Sessions Logged</h3>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 space-y-4">
-              <h3 className="font-bold text-slate-800">My Registered Courses</h3>
-              
+              <h3 className="font-bold text-slate-800 text-sm">Active Enrolled Courses</h3>
               {enrollments.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-6 bg-slate-50 rounded-xl">No active registrations.</p>
+                <p className="text-sm text-slate-400 text-center py-6">You are not registered in any upcoming training programs.</p>
               ) : (
                 <div className="space-y-3">
-                  {enrollments.map(enr => (
-                    <div key={enr.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-sm">
+                  {enrollments.map(e => (
+                    <div key={e.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-left">
                       <div>
-                        <h4 className="font-semibold text-slate-800">{enr.course.title}</h4>
-                        <p className="text-xs text-slate-400 mt-1">Location: {enr.course.location} | Duration: {enr.course.duration}</p>
+                        <h4 className="font-semibold text-slate-800 text-sm">{e.course.title}</h4>
+                        <p className="text-xs text-slate-400 mt-1">Status: {e.status}</p>
                       </div>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${
-                        enr.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-blue-50 text-blue-800 border border-blue-100'
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        e.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
                       }`}>
-                        {enr.status}
+                        {e.status}
                       </span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-slate-800">My Profile</h3>
-                <button
-                  onClick={() => {
-                    const info = JSON.parse(localStorage.getItem('userInfo'));
-                    setProfileForm({ name: info.name, phone: info.phone || '' });
-                    setShowProfileForm(true);
-                  }}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
-                  <Edit size={12} /> Edit
-                </button>
-              </div>
-
-              <div className="space-y-2 text-xs text-slate-600">
-                <div><strong>Local Church:</strong> Gitwe Local Church</div>
-                <div><strong>Registration Scope:</strong> Elder / Trainee</div>
-              </div>
-            </div>
           </div>
         </div>
       )}
 
-      {/* Tab: E-learning Materials */}
+      {/* Tab: My Materials */}
       {activeTab === 'materials' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
           <div>
-            <h3 className="font-bold text-slate-800 text-lg">E-Learning Material Library</h3>
-            <p className="text-xs text-slate-400">Access course lecture notes, reading files, and reference content.</p>
+            <h3 className="font-bold text-slate-800 text-lg">E-Learning Curricular Materials</h3>
+            <p className="text-xs text-slate-400">Download syllabus documents, lecture notes, and training guides.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {materials.map(mat => (
-              <div key={mat.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center">
+              <div key={mat.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center gap-4">
                 <div>
-                  <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] uppercase font-bold">
-                    {mat.courseTitle}
-                  </span>
-                  <h4 className="font-semibold text-slate-800 text-sm mt-1">{mat.title}</h4>
-                  <p className="text-[10px] text-slate-400 uppercase mt-0.5">{mat.fileType} Document</p>
+                  <h4 className="font-bold text-slate-800 text-sm">{mat.title}</h4>
+                  <p className="text-xs text-slate-400 mt-0.5">Program: {mat.courseTitle}</p>
                 </div>
                 
                 <button
                   onClick={() => {
-                    // Simulated download action
-                    setMessage(`Downloaded: ${mat.title}`);
+                    setMessage(`Mock material download triggered: ${mat.title}`);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shrink-0 animate-in fade-in"
                 >
                   <Download size={14} /> Download
                 </button>
@@ -213,29 +208,29 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
-      {/* Tab: Certificates */}
+      {/* Tab: My Certificate */}
       {activeTab === 'certificates' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
           <div>
-            <h3 className="font-bold text-slate-800 text-lg">My Certificates</h3>
-            <p className="text-xs text-slate-400">Download dynamic certificates verifying completed trainings.</p>
+            <h3 className="font-bold text-slate-800 text-lg">My Secure Certificates</h3>
+            <p className="text-xs text-slate-400">Review, print, or share your digital completion awards.</p>
           </div>
 
           {enrollments.filter(e => e.status === 'COMPLETED').length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No completed courses yet.</p>
+            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No completed training programs found.</p>
           ) : (
             <div className="space-y-4">
               {enrollments.filter(e => e.status === 'COMPLETED').map(enr => (
-                <div key={enr.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center">
+                <div key={enr.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center gap-4">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">{enr.course.title}</h4>
-                    <p className="text-xs text-slate-400 mt-1">Certified Date: {new Date(enr.certifiedAt || Date.now()).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-400 mt-1">Issued Date: {new Date(enr.certifiedAt || Date.now()).toLocaleDateString()}</p>
                   </div>
                   <button
                     onClick={() => setActiveCert(enr)}
-                    className="flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-md"
+                    className="flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-md shrink-0"
                   >
-                    View Certificate
+                    View & Share Certificate
                   </button>
                 </div>
               ))}
@@ -244,12 +239,87 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
-      {/* Tab: My Notifications */}
-      {activeTab === 'notifications' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+      {/* Tab: Evaluation Form (Dissertation requirement) */}
+      {activeTab === 'evaluation' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left max-w-lg">
           <div>
-            <h3 className="font-bold text-slate-800 text-lg">My Notifications</h3>
-            <p className="text-xs text-slate-400 font-medium">Verify system alerts and course scheduling notices.</p>
+            <h3 className="font-bold text-slate-800 text-lg">Training Evaluation Form</h3>
+            <p className="text-xs text-slate-400">Submit feedback about course content, timing, and instructor quality.</p>
+          </div>
+
+          <form onSubmit={handleEvalSubmit} className="space-y-5">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600">Select Enrolled Program</label>
+              <select
+                required
+                value={evalForm.courseId}
+                onChange={e => setEvalForm({ ...evalForm, courseId: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+              >
+                <option value="">-- Choose Program --</option>
+                {enrollments.map(enr => (
+                  <option key={enr.course.id} value={enr.course.id}>{enr.course.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-700">Course Content Value</span>
+                <input 
+                  type="range" min="1" max="5" 
+                  value={evalForm.contentRating}
+                  onChange={e => setEvalForm({ ...evalForm, contentRating: e.target.value })}
+                  className="w-32 accent-blue-600"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-700">Instructor Quality</span>
+                <input 
+                  type="range" min="1" max="5" 
+                  value={evalForm.teacherRating}
+                  onChange={e => setEvalForm({ ...evalForm, teacherRating: e.target.value })}
+                  className="w-32 accent-blue-600"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-700">Study Materials Usability</span>
+                <input 
+                  type="range" min="1" max="5" 
+                  value={evalForm.materialsRating}
+                  onChange={e => setEvalForm({ ...evalForm, materialsRating: e.target.value })}
+                  className="w-32 accent-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600">Feedback Comments</label>
+              <textarea 
+                value={evalForm.comments}
+                onChange={e => setEvalForm({ ...evalForm, comments: e.target.value })}
+                placeholder="What did you like? What can be improved?"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm h-24 focus:outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="py-2.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md"
+            >
+              {loading ? 'Submitting...' : 'Submit Evaluation'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Tab: Notifications log */}
+      {activeTab === 'notifications' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg">My Notification Logs</h3>
+            <p className="text-xs text-slate-400 font-medium">Verify system alerts and course notices dispatched to you.</p>
           </div>
 
           {notifications.length === 0 ? (
@@ -270,49 +340,6 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* MODAL: Profile form */}
-      {showProfileForm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden">
-            <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
-              <h3 className="font-bold text-base">Edit Profile details</h3>
-              <button onClick={() => setShowProfileForm(false)} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
-            </div>
-            <form onSubmit={handleProfileUpdate} className="p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">Phone</label>
-                <input
-                  type="text"
-                  required
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg active:scale-[0.98] transition-all"
-              >
-                {loading ? 'Saving...' : 'Save Profile'}
-              </button>
-            </form>
-          </div>
         </div>
       )}
 
@@ -338,7 +365,7 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
                 
                 <div className="py-2">
                   <p className="text-[10px] text-slate-500 italic">This certifies that Elder</p>
-                  <h4 className="text-lg font-bold text-blue-900 uppercase font-serif mt-1">{stats?.extraData?.enrollments[0]?.elder?.name || ' Silase'}</h4>
+                  <h4 className="text-lg font-bold text-blue-900 uppercase font-serif mt-1">{stats?.extraData?.enrollments[0]?.elder?.name || 'Elder'}</h4>
                 </div>
 
                 <div className="py-1">
@@ -352,7 +379,6 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
 
                 {/* QR Code and verification tag */}
                 <div className="pt-4 flex flex-col items-center gap-1">
-                  {/* Mock QR Code representation */}
                   <div className="w-16 h-16 bg-white border border-slate-300 p-1 flex flex-col gap-0.5 justify-center items-center">
                     <div className="grid grid-cols-4 gap-0.5 w-full h-full">
                       {Array.from({ length: 16 }).map((_, i) => (
@@ -364,14 +390,24 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all"
-              >
-                <Download size={14} /> Print / Download PDF
-              </button>
+              {/* Share & Download Actions */}
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <button
+                  onClick={() => {
+                    window.print();
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all"
+                >
+                  <Download size={14} /> Download PDF
+                </button>
+                <button
+                  onClick={() => handleCopyLink(activeCert.certificateQrCode)}
+                  className="flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all"
+                >
+                  {copied ? <Check size={14} /> : <Share2 size={14} />}
+                  <span>{copied ? 'Copied Link!' : 'Share Certificate'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

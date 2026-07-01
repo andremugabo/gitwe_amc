@@ -4,3 +4,6 @@ export { default as memberService } from './memberService';
 export { default as trainingService } from './trainingService';
 export { default as hierarchyService } from './hierarchyService';
 export { default as documentService } from './documentService';
+export { default as faqService } from './faqService';
+export { default as evaluationService } from './evaluationService';
+export { default as availabilityService } from './availabilityService';

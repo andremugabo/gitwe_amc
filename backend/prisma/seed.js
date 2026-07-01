@@ -107,6 +107,35 @@ async function main() {
     }
   });
 
+  // 3. Seed FAQs
+  console.log('Seeding FAQs...');
+  await prisma.faq.createMany({
+    data: [
+      {
+        question: 'How do I download my digital certificate?',
+        answer: 'Navigate to "My Certificate" tab on your dashboard. If you completed a training program successfully, you will see a card with download PDF and share options.',
+        category: 'Certificates'
+      },
+      {
+        question: 'Who should submit the evaluation form?',
+        answer: 'All enrolled elders are expected to submit an evaluation feedback form upon completion of a course to help improve training quality.',
+        category: 'Evaluations'
+      }
+    ],
+    skipDuplicates: true
+  });
+
+  // 4. Seed Pastor Availability record
+  console.log('Seeding Pastor Availability...');
+  await prisma.availability.create({
+    data: {
+      pastorId: pastor.id,
+      date: new Date(),
+      status: 'AVAILABLE',
+      notes: 'Available for Gitwe Ministerial Church elder registrations review.'
+    }
+  });
+
   console.log('Database seeding complete:');
   console.log({ unionAdmin, fieldSec, pastor, elder });
 }

@@ -8,6 +8,9 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const hierarchyRoutes = require('./routes/hierarchyRoutes');
 const trainingRoutes = require('./routes/trainingRoutes');
 const { swaggerUi, swaggerSpec } = require('./utils/swagger');
+const faqRoutes = require('./routes/faqRoutes');
+const evaluationRoutes = require('./routes/evaluationRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 const path = require('path');
 
 dotenv.config();
@@ -25,6 +28,9 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/hierarchy', hierarchyRoutes);
 app.use('/api/training', trainingRoutes);
+app.use('/api/faqs', faqRoutes);
+app.use('/api/evaluations', evaluationRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
