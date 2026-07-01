@@ -13,9 +13,28 @@ const TEXT_DARK = [15, 23, 42];         // #0f172a
 const TEXT_MID = [100, 116, 139];       // #64748b
 
 /**
+ * Pre-loads the logo as a base64 data URL for embedding in PDFs.
+ */
+function loadLogoBase64() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null); // Fallback gracefully
+    img.src = '/logo.png';
+  });
+}
+
+/**
  * Draws the branded header on the first page.
  */
-function drawHeader(doc, title, subtitle = '') {
+async function drawHeader(doc, title, subtitle = '', logoBase64 = null) {
   const pageW = doc.internal.pageSize.getWidth();
 
   // Blue gradient bar
@@ -26,28 +45,41 @@ function drawHeader(doc, title, subtitle = '') {
   doc.setFillColor(...BRAND_GOLD);
   doc.rect(0, 38, pageW, 3, 'F');
 
-  // Church cross symbol (text stand-in)
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text('✦ Gitwe AMC', 14, 18);
+  // Church cross symbol or real logo
+  if (logoBase64) {
+    // Draw white logo box
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(14, 5, 26, 26, 3, 3, 'F');
+    doc.addImage(logoBase64, 'PNG', 15, 6, 24, 24);
+  } else {
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('✦', 14, 24);
+  }
 
-  doc.setFontSize(9);
+  // Org name
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Gitwe AMC', 44, 16);
+
+  doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(186, 213, 255);
-  doc.text('Gitwe Adventist Ministerial Centre — Rwanda Union Mission', 14, 27);
+  doc.text('Gitwe Adventist Ministerial Centre — Rwanda Union Mission', 44, 25);
 
   // Report title (right-aligned)
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text(title, pageW - 14, 18, { align: 'right' });
+  doc.text(title, pageW - 14, 16, { align: 'right' });
 
   if (subtitle) {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(186, 213, 255);
-    doc.text(subtitle, pageW - 14, 27, { align: 'right' });
+    doc.text(subtitle, pageW - 14, 26, { align: 'right' });
   }
 }
 
