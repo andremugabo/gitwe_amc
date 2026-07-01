@@ -6,3 +6,4 @@ export { default as Sidebar } from './Sidebar';
 export { default as UnionAdminDashboard } from './UnionAdminDashboard';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as TrainerDashboard } from './TrainerDashboard';
+export { default as ToastContainer } from './ToastContainer';

@@ -12,6 +12,9 @@ const faqRoutes = require('./routes/faqRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const errorHandler = require('./middleware/errorHandler');
 const path = require('path');
 
 dotenv.config();
@@ -19,6 +22,15 @@ dotenv.config();
 const app = express();
 
 // Middleware
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  message: { message: 'Too many requests from this IP, please try again later.' }
+});
+app.use('/api', limiter);
+
 app.use(cors());
 app.use(express.json());
 
@@ -48,8 +60,13 @@ app.get('/', (req, res) => {
   res.send('Gitwe AMC API is running...');
 });
 
+// Centralized Error Handler Middleware
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;

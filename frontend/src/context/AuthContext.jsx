@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axios';
+import { toast } from '../utils/toast';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,32 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
+
+  // 1 Minute Inactivity Auto-Logout
+  useEffect(() => {
+    if (!user) return;
+
+    let idleTimeout;
+
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(() => {
+        logout();
+        toast.info('You have been logged out due to inactivity.');
+      }, 60000); // 1 minute
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    
+    events.forEach(event => window.addEventListener(event, resetIdleTimer));
+    
+    resetIdleTimer(); // start countdown
+
+    return () => {
+      clearTimeout(idleTimeout);
+      events.forEach(event => window.removeEventListener(event, resetIdleTimer));
+    };
+  }, [user]);
 
   const login = async (email, password) => {
     try {

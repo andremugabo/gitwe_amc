@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context';
 import { LanguageProvider } from './context';
-import { ErrorBoundary } from './components';
+import { ErrorBoundary, ToastContainer } from './components';
 import { Login, Register, ResetPassword, Dashboard, VerifyEmail } from './pages';
 
 // Helper to determine the dashboard path based on user role
@@ -45,6 +45,7 @@ function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <AuthProvider>
+          <ToastContainer />
           <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
