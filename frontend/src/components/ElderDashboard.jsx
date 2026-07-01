@@ -50,17 +50,14 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
       }
 
       // Materials loading
-      const { data: coursesData } = await trainingService.getCourses();
-      const allMaterials = [];
-      coursesData.forEach(c => {
-        allMaterials.push({
-          id: `mat-${c.id}`,
-          title: `Study Slide Deck for ${c.title}`,
-          fileType: 'PDF',
-          courseTitle: c.title
-        });
-      });
-      setMaterials(allMaterials);
+      const { data: materialsData } = await trainingService.getMaterials();
+      setMaterials(materialsData.map(m => ({
+        id: m.id,
+        title: m.title,
+        fileType: m.fileType,
+        fileUrl: m.fileUrl,
+        courseTitle: m.course?.title || 'Unknown Course'
+      })));
 
       if (activeTab === 'notifications') {
         const { data: nots } = await trainingService.getNotifications();
@@ -187,23 +184,27 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {materials.map(mat => (
-              <div key={mat.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center gap-4">
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">{mat.title}</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Program: {mat.courseTitle}</p>
+            {materials.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl w-full col-span-2">No learning materials have been uploaded for your enrolled courses yet.</p>
+            ) : (
+              materials.map(mat => (
+                <div key={mat.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center gap-4 animate-in fade-in duration-300">
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">{mat.title}</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Program: {mat.courseTitle}</p>
+                  </div>
+                  
+                  <a
+                    href={mat.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shrink-0 animate-in fade-in"
+                  >
+                    <Download size={14} /> Download
+                  </a>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    setMessage(`Mock material download triggered: ${mat.title}`);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shrink-0 animate-in fade-in"
-                >
-                  <Download size={14} /> Download
-                </button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

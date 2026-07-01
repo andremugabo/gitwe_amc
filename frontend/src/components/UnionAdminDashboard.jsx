@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context';
-import { trainingService, hierarchyService, authService, faqService, evaluationService } from '../services';
+import { trainingService, hierarchyService, authService, faqService, evaluationService, settingsService } from '../services';
 import { 
   Users, 
   BookOpen, 
@@ -54,7 +54,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // Settings mock state
+  // Settings state loaded from DB
   const [settings, setSettings] = useState({
     appName: 'Gitwe AMC Digital Platform',
     enableSms: true,
@@ -62,6 +62,12 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     smtpHost: 'smtp.gmail.com',
     smtpPort: '465'
   });
+
+  // Course materials management states
+  const [selectedCourseForMaterials, setSelectedCourseForMaterials] = useState(null);
+  const [courseMaterialsList, setCourseMaterialsList] = useState([]);
+  const [showMaterialForm, setShowMaterialForm] = useState(false);
+  const [materialForm, setMaterialForm] = useState({ title: '', fileUrl: '', fileType: 'PDF' });
 
   useEffect(() => {
     fetchData();
@@ -93,6 +99,16 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
       if (activeTab === 'evaluation' || activeTab === 'reports') {
         const { data } = await evaluationService.getEvaluations();
         setEvaluations(data);
+      }
+      if (activeTab === 'settings') {
+        const { data } = await settingsService.getSettings();
+        setSettings({
+          appName: data.appName || 'Gitwe AMC Digital Platform',
+          enableSms: data.enableSms !== undefined ? data.enableSms : true,
+          enableEmail: data.enableEmail !== undefined ? data.enableEmail : true,
+          smtpHost: data.smtpHost || 'smtp.gmail.com',
+          smtpPort: data.smtpPort || '465'
+        });
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -189,9 +205,47 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     }
   };
 
-  const handleSettingsSave = (e) => {
+  const handleSettingsSave = async (e) => {
     e.preventDefault();
-    setMessage('Admin settings updated successfully!');
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await settingsService.updateSettings(settings);
+      setMessage('Admin settings updated successfully!');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update system configurations.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCourseMaterials = async (courseId) => {
+    try {
+      const { data } = await trainingService.getCourseById(courseId);
+      setCourseMaterialsList(data.materials || []);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load course materials.');
+    }
+  };
+
+  const handleMaterialSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedCourseForMaterials) return;
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await trainingService.addCourseMaterial(selectedCourseForMaterials.id, materialForm);
+      setMaterialForm({ title: '', fileUrl: '', fileType: 'PDF' });
+      fetchCourseMaterials(selectedCourseForMaterials.id);
+      setMessage('Course material uploaded successfully!');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload material');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Scoped lists
@@ -395,8 +449,19 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400 border-t border-slate-200/60 pt-3">
-                  {c._count?.enrollments || 0} Elders Registered | {c._count?.sessions || 0} Active Session Blocks
+                <div className="flex justify-between items-center text-xs text-slate-400 border-t border-slate-200/60 pt-3">
+                  <div>
+                    {c._count?.enrollments || 0} Elders Registered | {c._count?.sessions || 0} Active Session Blocks
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCourseForMaterials(c);
+                      fetchCourseMaterials(c.id);
+                    }}
+                    className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all shrink-0 animate-in fade-in"
+                  >
+                    Manage Materials
+                  </button>
                 </div>
               </div>
             ))}
@@ -1120,6 +1185,129 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                 {loading ? 'Submitting...' : (editingUserId ? 'Update Details' : 'Register Account')}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Course Materials Manager */}
+      {selectedCourseForMaterials && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden text-left flex flex-col max-h-[90vh]">
+            <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-base">Course Materials: {selectedCourseForMaterials.title}</h3>
+                <p className="text-[10px] text-white/80">Manage e-learning syllabi and study guides</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setSelectedCourseForMaterials(null);
+                  setCourseMaterialsList([]);
+                  setShowMaterialForm(false);
+                }} 
+                className="text-white hover:text-slate-200 font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {/* Materials list */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Current Documents</h4>
+                {courseMaterialsList.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-4 bg-slate-50 rounded-xl text-center font-medium">No materials uploaded yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {courseMaterialsList.map(m => (
+                      <div key={m.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center animate-in fade-in duration-300">
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">{m.title}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 bg-slate-250 bg-slate-200 text-slate-600 rounded font-bold uppercase">{m.fileType}</span>
+                        </div>
+                        <a 
+                          href={m.fileUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 font-bold text-slate-700"
+                        >
+                          View File
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Upload form trigger */}
+              {!showMaterialForm ? (
+                <button
+                  onClick={() => setShowMaterialForm(true)}
+                  className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow"
+                >
+                  + Add New Material
+                </button>
+              ) : (
+                <form onSubmit={handleMaterialSubmit} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 animate-in slide-in-from-top duration-300">
+                  <h4 className="font-bold text-slate-800 text-xs">New Material Details</h4>
+                  
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500">Document Title</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. Stewardship Syllabus"
+                      value={materialForm.title}
+                      onChange={e => setMaterialForm({ ...materialForm, title: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500">Document Type</label>
+                      <select
+                        value={materialForm.fileType}
+                        onChange={e => setMaterialForm({ ...materialForm, fileType: e.target.value })}
+                        className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
+                      >
+                        <option value="PDF">PDF Document</option>
+                        <option value="PPT">PowerPoint Slide</option>
+                        <option value="WORD">Word File</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500">Document URL / File Link</label>
+                      <input 
+                        type="url" 
+                        required
+                        placeholder="https://example.com/file.pdf"
+                        value={materialForm.fileUrl}
+                        onChange={e => setMaterialForm({ ...materialForm, fileUrl: e.target.value })}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold"
+                    >
+                      {loading ? 'Adding...' : 'Save Material'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMaterialForm(false)}
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-350 text-slate-700 rounded-lg text-xs font-bold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

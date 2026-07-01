@@ -496,6 +496,36 @@ const getNotifications = async (req, res) => {
   }
 };
 
+// 12. Get course materials scoped by role (Elder sees enrolled course materials only)
+const getCourseMaterials = async (req, res) => {
+  try {
+    let whereClause = {};
+
+    if (req.user.role === 'ELDER') {
+      const enrollments = await prisma.courseEnrollment.findMany({
+        where: { elderId: req.user.id },
+        select: { courseId: true }
+      });
+      const enrolledCourseIds = enrollments.map(e => e.courseId);
+      whereClause.courseId = { in: enrolledCourseIds };
+    }
+
+    const materials = await prisma.courseMaterial.findMany({
+      where: whereClause,
+      include: {
+        course: {
+          select: { title: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(materials);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getCourses,
   createCourse,
@@ -507,5 +537,6 @@ module.exports = {
   createSession,
   markAttendance,
   issueCertificate,
-  getNotifications
+  getNotifications,
+  getCourseMaterials
 };

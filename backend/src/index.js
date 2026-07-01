@@ -12,6 +12,7 @@ const faqRoutes = require('./routes/faqRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/errorHandler');
@@ -45,6 +46,7 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/trainer', trainerRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

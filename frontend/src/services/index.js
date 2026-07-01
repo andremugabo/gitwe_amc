@@ -8,3 +8,4 @@ export { default as faqService } from './faqService';
 export { default as evaluationService } from './evaluationService';
 export { default as availabilityService } from './availabilityService';
 export { default as trainerService } from './trainerService';
+export { default as settingsService } from './settingsService';

@@ -1,6 +1,32 @@
 const nodemailer = require('nodemailer');
+const prisma = require('./prisma');
 
 const sendEmail = async ({ to, subject, text, html }) => {
+  let enableEmail = true;
+  let smtpHost = 'smtp.gmail.com';
+  let smtpPort = 465;
+
+  try {
+    const settings = await prisma.setting.findMany({
+      where: {
+        key: { in: ['enableEmail', 'smtpHost', 'smtpPort'] }
+      }
+    });
+
+    settings.forEach(s => {
+      if (s.key === 'enableEmail') enableEmail = s.value === 'true';
+      if (s.key === 'smtpHost') smtpHost = s.value;
+      if (s.key === 'smtpPort') smtpPort = parseInt(s.value, 10) || 465;
+    });
+  } catch (err) {
+    console.error('Failed to load SMTP settings from database, using defaults:', err.message);
+  }
+
+  if (!enableEmail) {
+    console.log(`[EMAIL SENDING DISABLED]: Skipped sending email to ${to} (${subject})`);
+    return { skipped: true };
+  }
+
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
 
@@ -15,12 +41,14 @@ const sendEmail = async ({ to, subject, text, html }) => {
     return { simulated: true };
   }
 
-  // Create Gmail SMTP transporter
+  // Create dynamic SMTP transporter
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // True for port 465, false for 587
     auth: {
       user: emailUser,
-      pass: emailPass // Note: Should be a 16-character App Password, not main login password
+      pass: emailPass
     }
   });
 

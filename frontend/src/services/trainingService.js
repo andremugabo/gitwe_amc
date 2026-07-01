@@ -21,7 +21,9 @@ const trainingService = {
   
   issueCertificate: (data) => api.post('/training/certificate', data),
   
-  getNotifications: () => api.get('/training/notifications')
+  getNotifications: () => api.get('/training/notifications'),
+
+  getMaterials: () => api.get('/training/materials')
 };
 
 export default trainingService;

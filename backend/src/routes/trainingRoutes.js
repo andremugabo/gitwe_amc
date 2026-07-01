@@ -11,7 +11,8 @@ const {
   createSession,
   markAttendance,
   issueCertificate,
-  getNotifications
+  getNotifications,
+  getCourseMaterials
 } = require('../controllers/trainingController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -80,7 +81,20 @@ router.route('/')
  *     responses:
  *       200:
  *         description: List of recommendations with pastor and elder details
+/**
+ * @swagger
+ * /training/materials:
+ *   get:
+ *     summary: Get course materials (scoped for elder courses if role is ELDER)
+ *     tags: [Training]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of course materials
  */
+router.get('/materials', protect, getCourseMaterials);
+
 router.get('/recommend/list', protect, getRecommendations);
 
 /**

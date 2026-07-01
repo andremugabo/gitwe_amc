@@ -155,6 +155,24 @@ async function main() {
     }
   });
 
+  // 5. Seed System Settings
+  console.log('Seeding Default System Settings...');
+  const settingsData = [
+    { key: 'appName', value: 'Gitwe AMC Digital Platform', description: 'Application display title' },
+    { key: 'enableEmail', value: 'true', description: 'Enable system email alerts' },
+    { key: 'enableSms', value: 'true', description: 'Enable SMS OTP validation' },
+    { key: 'smtpHost', value: 'smtp.gmail.com', description: 'SMTP Server hostname' },
+    { key: 'smtpPort', value: '465', description: 'SMTP Port' }
+  ];
+
+  for (const s of settingsData) {
+    await prisma.setting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s
+    });
+  }
+
   console.log('Database seeding complete:');
   console.log({ unionAdmin, fieldSec, pastor, elder, trainer });
 }
