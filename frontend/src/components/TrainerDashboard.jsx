@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { toast } from '../utils/toast';
+import { generateTrainerReportPDF } from '../utils/pdfReports';
 import { trainerService } from '../services';
 import { 
   Users, 
   BookOpen, 
   Award, 
-  AlertCircle,
-  CheckCircle2,
+  Download,
   Calendar,
   ClipboardList,
   FileText,
@@ -411,9 +411,17 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
       {/* Tab: Course Evaluations */}
       {activeTab === 'evaluations' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
-          <div>
-            <h3 className="font-bold text-slate-800 text-lg">Trainee Course Feedback</h3>
-            <p className="text-xs text-slate-400">Review evaluation feedback and scores submitted by trainees for your courses.</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg">Trainee Course Feedback</h3>
+              <p className="text-xs text-slate-400">Review evaluation feedback and scores submitted by trainees for your courses.</p>
+            </div>
+            <button
+              onClick={() => generateTrainerReportPDF({ courses, trainees, evaluations, trainerName: user?.name })}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+            >
+              <Download size={14} /> Export PDF Report
+            </button>
           </div>
 
           {evaluations.length === 0 ? (

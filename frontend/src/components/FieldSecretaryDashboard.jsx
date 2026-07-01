@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context';
+import { useLanguage, useAuth } from '../context';
 import { toast } from '../utils/toast';
+import { generateEldersReportPDF, generateEnrollmentReportPDF } from '../utils/pdfReports';
 import { trainingService, memberService, authService } from '../services';
 import { 
   Users, 
@@ -11,12 +12,15 @@ import {
   Plus, 
   Check, 
   Download,
-  AlertCircle,
-  CheckCircle2
+  FileText,
+  ShieldCheck,
+  ShieldOff
 } from 'lucide-react';
 
 const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
+  const { user } = useAuth();
   const [elders, setElders] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [activeCourse, setActiveCourse] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -47,9 +51,18 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const fetchData = async () => {
     try {
-      if (activeTab === 'dashboard' || activeTab === 'registrations') {
+      if (activeTab === 'dashboard' || activeTab === 'registrations' || activeTab === 'users') {
         const { data } = await authService.getUsers({ role: 'ELDER' });
         setElders(data);
+      }
+
+      if (activeTab === 'users') {
+        // Load all scoped users (Elders + Pastors) for user management
+        const [elderRes, pastorRes] = await Promise.all([
+          authService.getUsers({ role: 'ELDER' }),
+          authService.getUsers({ role: 'PASTOR' }),
+        ]);
+        setAllUsers([...elderRes.data, ...pastorRes.data]);
       }
       
       const { data: coursesData } = await trainingService.getCourses();
@@ -130,6 +143,16 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
     setAttendanceSheet(prev => 
       prev.map(item => item.elderId === elderId ? { ...item, isPresent: !item.isPresent } : item)
     );
+  };
+
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    try {
+      await authService.updateUser(userId, { isActive: !currentStatus });
+      toast.success(`User ${currentStatus ? 'disabled' : 'enabled'} successfully!`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update user status');
+    }
   };
 
   const saveAttendance = async () => {
@@ -225,20 +248,24 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
             <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
               <h3 className="font-bold text-slate-800">Reports Export</h3>
               <button
-                onClick={() => {
-                  const csv = "data:text/csv;charset=utf-8,ID,Name,Role,Status\n" +
-                    elders.map(e => `"${e.id}","${e.name || e.firstName}","Elder","Active"`).join("\n");
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodeURI(csv));
-                  link.setAttribute("download", "field_scoped_elders.csv");
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-                className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-left text-xs font-semibold text-slate-700"
+                onClick={() => generateEldersReportPDF(elders)}
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl text-left text-xs font-semibold text-slate-700 transition-all group"
               >
-                <span>Export Field Elders List</span>
-                <Download size={14} />
+                <span className="flex items-center gap-2 group-hover:text-blue-700">
+                  <FileText size={14} className="text-blue-600" />
+                  Export Elders List (PDF)
+                </span>
+                <Download size={14} className="text-slate-400 group-hover:text-blue-600" />
+              </button>
+              <button
+                onClick={() => generateEnrollmentReportPDF(courses)}
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-xl text-left text-xs font-semibold text-slate-700 transition-all group"
+              >
+                <span className="flex items-center gap-2 group-hover:text-emerald-700">
+                  <FileText size={14} className="text-emerald-600" />
+                  Export Enrollment Report (PDF)
+                </span>
+                <Download size={14} className="text-slate-400 group-hover:text-emerald-600" />
               </button>
             </div>
           </div>
@@ -397,6 +424,89 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Tab: User Management */}
+      {activeTab === 'users' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg">User Management</h3>
+              <p className="text-xs text-slate-400">Manage elders and pastors within your field scope.</p>
+            </div>
+            <button
+              onClick={() => generateEldersReportPDF(allUsers)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+            >
+              <Download size={14} /> Export PDF
+            </button>
+          </div>
+
+          {allUsers.length === 0 ? (
+            <div className="text-center py-16 text-slate-400">
+              <Users size={40} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-semibold">No users found in your field scope.</p>
+              <p className="text-xs mt-1">Elders and Pastors assigned to your field will appear here.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
+                    <th className="py-3 px-4">Name</th>
+                    <th className="py-3 px-4">Email</th>
+                    <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Phone</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {allUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-slate-800">{u.name}</td>
+                      <td className="py-3 px-4 text-slate-500 text-xs">{u.email}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          u.role === 'ELDER'
+                            ? 'bg-blue-50 text-blue-800 border-blue-100'
+                            : 'bg-purple-50 text-purple-800 border-purple-100'
+                        }`}>
+                          {u.role.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-500 text-xs">{u.phone || '—'}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          u.isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            : 'bg-red-50 text-red-700 border-red-100'
+                        }`}>
+                          {u.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => handleToggleUserStatus(u.id, u.isActive)}
+                          title={u.isActive ? 'Disable user' : 'Enable user'}
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            u.isActive
+                              ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-100'
+                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100'
+                          }`}
+                        >
+                          {u.isActive
+                            ? <><ShieldOff size={12} /> Disable</>
+                            : <><ShieldCheck size={12} /> Enable</>}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context';
 import { toast } from '../utils/toast';
+import { generateUnionReportPDF } from '../utils/pdfReports';
 import { trainingService, hierarchyService, authService, faqService, evaluationService, settingsService } from '../services';
 import { 
   ResponsiveContainer, 
@@ -538,19 +539,14 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
               <h3 className="font-bold text-slate-800 text-lg">Administrative Reports & Analytics</h3>
               <p className="text-xs text-slate-400">Review evaluation metrics, certification stats, and enrollment counts.</p>
             </div>
-            <button
-              onClick={() => {
-                const reportContent = `GITWE AMC COMPREHENSIVE STATUS REPORT\nDate: ${new Date().toLocaleDateString()}\nTotal Active Courses: ${courses.length}\nTotal Registered Leaders: ${users.length}\nEvaluations Logged: ${evaluations.length}`;
-                const blob = new Blob([reportContent], { type: 'text/plain' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "Gitwe_AMC_Status_Report.txt";
-                link.click();
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
-            >
-              <Download size={16} /> Download Status Report
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => generateUnionReportPDF({ users, courses, evaluations })}
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+              >
+                <Download size={16} /> Export Full Report (PDF)
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
