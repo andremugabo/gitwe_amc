@@ -280,6 +280,11 @@ const recommendElder = async (req, res) => {
       return res.status(403).json({ message: 'This elder is not under your pastoral care.' });
     }
 
+    const elder = await prisma.user.findUnique({ where: { id: elderId } });
+    if (!elder) {
+      return res.status(404).json({ message: 'Elder not found' });
+    }
+
     const recommendation = await prisma.recommendation.create({
       data: {
         courseName,
@@ -310,12 +315,12 @@ const recommendElder = async (req, res) => {
         broadcast('NOTIFICATION', {
           recipientId: t.id,
           title: 'Training Recommendation',
-          message: `Pastor ${req.user.name} recommended Elder Gasana Silas for the program: "${courseName}".`
+          message: `Pastor ${req.user.name} recommended Elder ${elder.name} for the program: "${courseName}".`
         });
         return prisma.notification.create({
           data: {
             title: 'Training Recommendation',
-            message: `Pastor ${req.user.name} recommended Elder Gasana Silas for the program: "${courseName}".`,
+            message: `Pastor ${req.user.name} recommended Elder ${elder.name} for the program: "${courseName}".`,
             type: 'SYSTEM',
             recipientId: t.id
           }
@@ -324,19 +329,16 @@ const recommendElder = async (req, res) => {
     );
 
     // Send actual email notifications to Field Secretaries and Union Admins
-    const elder = await prisma.user.findUnique({ where: { id: elderId } });
-    if (elder) {
-      await Promise.all(
-        notifyTargets.map(t =>
-          sendEmail({
-            to: t.email,
-            subject: 'Training Recommendation Submitted',
-            text: `Pastor ${req.user.name} recommended Elder ${elder.name} for the program: "${courseName}".`,
-            html: getRecommendationTemplate(t.name, req.user.name, elder.name, courseName, notes)
-          }).catch(err => console.error('Failed to send recommendation email to', t.email, err.message))
-        )
-      );
-    }
+    await Promise.all(
+      notifyTargets.map(t =>
+        sendEmail({
+          to: t.email,
+          subject: 'Training Recommendation Submitted',
+          text: `Pastor ${req.user.name} recommended Elder ${elder.name} for the program: "${courseName}".`,
+          html: getRecommendationTemplate(t.name, req.user.name, elder.name, courseName, notes)
+        }).catch(err => console.error('Failed to send recommendation email to', t.email, err.message))
+      )
+    );
 
     res.status(201).json(recommendation);
   } catch (error) {
@@ -526,6 +528,125 @@ const getCourseMaterials = async (req, res) => {
   }
 };
 
+// 13. Get all tests available for courses enrolled by the elder
+// @route   GET /api/training/tests
+// @access  Private (ELDER)
+const getTraineeTests = async (req, res) => {
+  if (req.user.role !== 'ELDER') {
+    return res.status(403).json({ message: 'Access denied. Elders only.' });
+  }
+
+  try {
+    // Find elder's enrolled courses
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { elderId: req.user.id },
+      select: { courseId: true }
+    });
+
+    const enrolledCourseIds = enrollments.map(e => e.courseId);
+
+    // Find tests for those courses
+    const tests = await prisma.test.findMany({
+      where: { courseId: { in: enrolledCourseIds } },
+      include: {
+        course: { select: { title: true } },
+        results: {
+          where: { elderId: req.user.id }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(tests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 14. Submit answers for a course test
+// @route   POST /api/training/tests/:testId/submit
+// @access  Private (ELDER)
+const submitTest = async (req, res) => {
+  const { testId } = req.params;
+  const { answers } = req.body;
+
+  if (req.user.role !== 'ELDER') {
+    return res.status(403).json({ message: 'Access denied. Elders only.' });
+  }
+
+  try {
+    const test = await prisma.test.findUnique({
+      where: { id: testId },
+      include: { course: true }
+    });
+
+    if (!test) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    // Verify elder is enrolled in the course for this test
+    const enrollment = await prisma.courseEnrollment.findUnique({
+      where: {
+        courseId_elderId: {
+          courseId: test.courseId,
+          elderId: req.user.id
+        }
+      }
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({ message: 'You are not enrolled in the course for this test.' });
+    }
+
+    // Check if already submitted
+    const existingResult = await prisma.testResult.findUnique({
+      where: {
+        testId_elderId: {
+          testId,
+          elderId: req.user.id
+        }
+      }
+    });
+
+    if (existingResult) {
+      return res.status(400).json({ message: 'You have already submitted this test.' });
+    }
+
+    // Create a new TestResult (submission) with PENDING status
+    const result = await prisma.testResult.create({
+      data: {
+        testId,
+        elderId: req.user.id,
+        answers: typeof answers === 'string' ? answers : JSON.stringify(answers),
+        score: null, // Ungraded yet
+        status: 'PENDING'
+      }
+    });
+
+    // Notify the trainer
+    if (test.course.trainerId) {
+      broadcast('NOTIFICATION', {
+        recipientId: test.course.trainerId,
+        title: 'New Test Submission',
+        message: `Elder ${req.user.name} submitted answers for test "${test.title}"`
+      });
+
+      await prisma.notification.create({
+        data: {
+          title: 'New Test Submission',
+          message: `Elder ${req.user.name} submitted answers for test "${test.title}". Go to prepare tests to grade it.`,
+          type: 'SYSTEM',
+          recipientId: test.course.trainerId
+        }
+      });
+    }
+
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getCourses,
   createCourse,
@@ -538,5 +659,7 @@ module.exports = {
   markAttendance,
   issueCertificate,
   getNotifications,
-  getCourseMaterials
+  getCourseMaterials,
+  getTraineeTests,
+  submitTest
 };

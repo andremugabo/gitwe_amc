@@ -12,7 +12,9 @@ const {
   markAttendance,
   issueCertificate,
   getNotifications,
-  getCourseMaterials
+  getCourseMaterials,
+  getTraineeTests,
+  submitTest
 } = require('../controllers/trainingController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -332,5 +334,9 @@ router.post('/:id/session', protect, authorize('UNION_ADMIN', 'FIELD_SECRETARY')
  *         description: Cannot mark attendance for elders outside your scope
  */
 router.post('/session/:sessionId/attendance', protect, authorize('UNION_ADMIN', 'FIELD_SECRETARY'), markAttendance);
+
+// Trainee tests routes
+router.get('/tests/list', protect, getTraineeTests);
+router.post('/tests/:testId/submit', protect, submitTest);
 
 module.exports = router;
