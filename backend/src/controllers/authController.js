@@ -31,6 +31,10 @@ const loginUser = async (req, res) => {
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Your account has been deactivated. Please contact support.' });
+    }
+
     if (await bcrypt.compare(password, user.password)) {
       res.json({
         id: user.id,
@@ -316,6 +320,7 @@ const getUsersList = async (req, res) => {
         districtId: true,
         localChurchId: true,
         isVerified: true,
+        isActive: true,
         createdAt: true
       },
       orderBy: { name: 'asc' }
@@ -327,6 +332,47 @@ const getUsersList = async (req, res) => {
   }
 };
 
+// @desc    Update user details (Edit name, role, phone, or Disable status)
+// @route   PUT /api/auth/users/:id
+// @access  Private (UNION_ADMIN)
+const updateUser = async (req, res) => {
+  if (req.user.role !== 'UNION_ADMIN') {
+    return res.status(403).json({ message: 'Access denied. Union admins only.' });
+  }
+
+  const { id } = req.params;
+  const { name, email, role, phone, isActive, unionId, fieldId, districtId, localChurchId } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        role,
+        phone,
+        isActive: isActive !== undefined ? isActive : undefined,
+        unionId: unionId !== undefined ? unionId : undefined,
+        fieldId: fieldId !== undefined ? fieldId : undefined,
+        districtId: districtId !== undefined ? districtId : undefined,
+        localChurchId: localChurchId !== undefined ? localChurchId : undefined
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        isActive: true,
+        isVerified: true
+      }
+    });
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ message: error.message || 'Failed to update user details.' });
+  }
+};
+
 module.exports = { 
   loginUser, 
   registerUser, 
@@ -334,5 +380,6 @@ module.exports = {
   forgotPassword, 
   resetPassword, 
   getUserProfile,
-  getUsersList
+  getUsersList,
+  updateUser
 };

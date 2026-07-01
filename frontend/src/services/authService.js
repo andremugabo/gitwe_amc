@@ -14,7 +14,9 @@ const authService = {
 
   getProfile: () => api.get('/auth/profile'),
 
-  getUsers: (params) => api.get('/auth/users', { params })
+  getUsers: (params) => api.get('/auth/users', { params }),
+
+  updateUser: (id, data) => api.put(`/auth/users/${id}`, data)
 };
 
 export default authService;

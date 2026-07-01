@@ -38,9 +38,11 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   });
   
   const [showUserForm, setShowUserForm] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
   const [userForm, setUserForm] = useState({
     name: '', email: '', password: '', role: 'FIELD_SECRETARY', phone: '',
-    unionId: 'd3b07384-d113-4ec6-a5b6-7123456789ab', fieldId: '', districtId: '', localChurchId: ''
+    unionId: 'd3b07384-d113-4ec6-a5b6-7123456789ab', fieldId: '', districtId: '', localChurchId: '',
+    isActive: true
   });
 
   const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: 'General' });
@@ -131,17 +133,28 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     setError('');
     setMessage('');
     try {
-      await authService.register({ ...userForm, isVerified: true });
-      setMessage('Leader account registered successfully!');
+      if (editingUserId) {
+        const updateData = { ...userForm };
+        if (!updateData.password) {
+          delete updateData.password;
+        }
+        await authService.updateUser(editingUserId, updateData);
+        setMessage('Leader account details updated successfully!');
+      } else {
+        await authService.register({ ...userForm, isVerified: true });
+        setMessage('Leader account registered successfully!');
+      }
       setUserForm({
         name: '', email: '', password: '', role: 'FIELD_SECRETARY', phone: '',
-        unionId: 'd3b07384-d113-4ec6-a5b6-7123456789ab', fieldId: '', districtId: '', localChurchId: ''
+        unionId: 'd3b07384-d113-4ec6-a5b6-7123456789ab', fieldId: '', districtId: '', localChurchId: '',
+        isActive: true
       });
+      setEditingUserId(null);
       setShowUserForm(false);
       fetchData();
       refreshStats();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register account');
+      setError(err.response?.data?.message || 'Failed to submit account changes');
     } finally {
       setLoading(false);
     }
@@ -700,14 +713,22 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
 
       {/* Tab: Manage Users */}
       {activeTab === 'manage_users' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="font-bold text-slate-800 text-lg">Manage Leader Accounts</h3>
-              <p className="text-xs text-slate-400">Add, configure, or suspend administrative users.</p>
+              <p className="text-xs text-slate-400 font-medium">Add, configure, or suspend administrative users.</p>
             </div>
             <button
-              onClick={() => setShowUserForm(true)}
+              onClick={() => {
+                setEditingUserId(null);
+                setUserForm({
+                  name: '', email: '', password: '', role: 'FIELD_SECRETARY', phone: '',
+                  unionId: 'd3b07384-d113-4ec6-a5b6-7123456789ab', fieldId: '', districtId: '', localChurchId: '',
+                  isActive: true
+                });
+                setShowUserForm(true);
+              }}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
             >
               <Plus size={16} /> Register Account
@@ -721,6 +742,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                   <th className="py-3 px-4">Name</th>
                   <th className="py-3 px-4">Email</th>
                   <th className="py-3 px-4">Role</th>
+                  <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Action</th>
                 </tr>
               </thead>
@@ -728,18 +750,40 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-slate-50">
                     <td className="py-3.5 px-4 font-semibold text-slate-800">{u.name}</td>
-                    <td className="py-3.5 px-4 text-slate-505 text-slate-500">{u.email}</td>
+                    <td className="py-3.5 px-4 text-slate-500">{u.email}</td>
                     <td className="py-3.5 px-4">
                       <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] uppercase font-bold">
                         {u.role}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
+                      <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold ${
+                        u.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'
+                      }`}>
+                        {u.isActive ? 'Active' : 'Suspended'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
                       <button 
-                        onClick={() => alert('Account status updated')}
+                        onClick={() => {
+                          setEditingUserId(u.id);
+                          setUserForm({
+                            name: u.name,
+                            email: u.email,
+                            password: '',
+                            role: u.role,
+                            phone: u.phone || '',
+                            unionId: u.unionId || 'd3b07384-d113-4ec6-a5b6-7123456789ab',
+                            fieldId: u.fieldId || '',
+                            districtId: u.districtId || '',
+                            localChurchId: u.localChurchId || '',
+                            isActive: u.isActive
+                          });
+                          setShowUserForm(true);
+                        }}
                         className="text-xs font-bold text-blue-600 hover:underline"
                       >
-                        Edit Access
+                        Edit Details
                       </button>
                     </td>
                   </tr>
@@ -936,7 +980,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden text-left">
             <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
-              <h3 className="font-bold text-base">Register Leader Account</h3>
+              <h3 className="font-bold text-base">{editingUserId ? 'Edit Leader Account' : 'Register Leader Account'}</h3>
               <button onClick={() => setShowUserForm(false)} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
             </div>
             <form onSubmit={handleUserSubmit} className="p-6 space-y-4">
@@ -965,13 +1009,13 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600">Password</label>
+                  <label className="text-xs font-semibold text-slate-600">{editingUserId ? 'New Password (Optional)' : 'Password'}</label>
                   <input
                     type="password"
-                    required
+                    required={!editingUserId}
                     value={userForm.password}
                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                    placeholder="••••••••"
+                    placeholder={editingUserId ? 'Leave blank to keep same' : '••••••••'}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
                   />
                 </div>
@@ -1001,6 +1045,20 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                   />
                 </div>
               </div>
+
+              {editingUserId && (
+                <div className="space-y-1 pt-1">
+                  <label className="text-xs font-semibold text-slate-600">Account status</label>
+                  <select
+                    value={userForm.isActive ? 'active' : 'disabled'}
+                    onChange={(e) => setUserForm({ ...userForm, isActive: e.target.value === 'active' })}
+                    className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none"
+                  >
+                    <option value="active">Active (Enabled)</option>
+                    <option value="disabled">Suspended (Disabled)</option>
+                  </select>
+                </div>
+              )}
 
               {/* Dynamic location scoping in form */}
               <div className="space-y-4 border-t border-slate-100 pt-3">
@@ -1059,7 +1117,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                 disabled={loading}
                 className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
               >
-                {loading ? 'Creating...' : 'Register Account'}
+                {loading ? 'Submitting...' : (editingUserId ? 'Update Details' : 'Register Account')}
               </button>
             </form>
           </div>

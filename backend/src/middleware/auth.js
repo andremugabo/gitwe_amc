@@ -19,12 +19,17 @@ const protect = async (req, res, next) => {
           unionId: true,
           fieldId: true,
           districtId: true,
-          localChurchId: true
+          localChurchId: true,
+          isActive: true
         }
       });
 
       if (!req.user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+
+      if (!req.user.isActive) {
+        return res.status(401).json({ message: 'User account is disabled.' });
       }
 
       next();

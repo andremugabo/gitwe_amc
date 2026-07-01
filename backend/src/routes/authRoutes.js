@@ -7,7 +7,8 @@ const {
   forgotPassword, 
   resetPassword, 
   getUserProfile,
-  getUsersList
+  getUsersList,
+  updateUser
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -210,5 +211,44 @@ router.get('/profile', protect, getUserProfile);
  *         description: Not authorized
  */
 router.get('/users', protect, getUsersList);
+
+/**
+ * @swagger
+ * /auth/users/{id}:
+ *   put:
+ *     summary: Update a system user details (Edit info/role or disable account)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       403:
+ *         description: Forbidden — Union Admin authorization required
+ */
+router.put('/users/:id', protect, updateUser);
 
 module.exports = router;
