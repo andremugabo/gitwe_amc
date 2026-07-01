@@ -6,6 +6,7 @@ const {
   markTraineeAttendance, 
   createCourseTest, 
   getTestResults, 
+  gradeTestResult,
   getTrainerEvaluations 
 } = require('../controllers/trainerController');
 const { protect } = require('../middleware/auth');
@@ -132,6 +133,7 @@ router.post('/tests', protect, createCourseTest);
  *         description: Forbidden
  */
 router.get('/results', protect, getTestResults);
+router.post('/results/:resultId/grade', protect, gradeTestResult);
 
 /**
  * @swagger

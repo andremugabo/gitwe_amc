@@ -150,10 +150,10 @@ const getTestResults = async (req, res) => {
       },
       include: {
         test: {
-          select: { title: true, courseId: true }
+          select: { title: true, courseId: true, questions: true }
         },
         elder: {
-          select: { name: true, email: true }
+          select: { id: true, name: true, email: true }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -161,6 +161,46 @@ const getTestResults = async (req, res) => {
     res.json(results);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Grade/evaluate a trainee's test submission
+// @route   POST /api/trainer/results/:resultId/grade
+// @access  Private (TRAINER)
+const gradeTestResult = async (req, res) => {
+  const { resultId } = req.params;
+  const { score, status, feedback } = req.body;
+
+  if (req.user.role !== 'TRAINER') {
+    return res.status(403).json({ message: 'Access denied. Trainers only.' });
+  }
+
+  try {
+    const result = await prisma.testResult.findUnique({
+      where: { id: resultId },
+      include: { test: { include: { course: true } } }
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: 'Test result not found' });
+    }
+
+    if (result.test.course.trainerId !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized. You are not the trainer for this course.' });
+    }
+
+    const updatedResult = await prisma.testResult.update({
+      where: { id: resultId },
+      data: {
+        score: parseInt(score),
+        status: status || (parseInt(score) >= 50 ? 'PASSED' : 'FAILED'),
+        feedback
+      }
+    });
+
+    res.json(updatedResult);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -195,5 +235,6 @@ module.exports = {
   markTraineeAttendance,
   createCourseTest,
   getTestResults,
+  gradeTestResult,
   getTrainerEvaluations
 };
