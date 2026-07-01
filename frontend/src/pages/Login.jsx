@@ -3,7 +3,8 @@ import { useAuth, useLanguage } from '../context';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button, Input } from '../components/ui';
 import { toast } from '../utils/toast';
-import { Church, Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -42,8 +43,8 @@ const Login = () => {
 
       <div className="w-full max-w-md glass rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
         <div className="church-gradient p-8 text-white text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4 backdrop-blur-md">
-            <Church size={32} strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg">
+            <img src={logoImg} alt="Gitwe AMC" className="w-full h-full object-contain p-1" />
           </div>
           <h1 className="text-2xl font-bold">{t('appName')}</h1>
           <p className="text-white/70 text-sm mt-1">Gitwe Ministerial Centre</p>

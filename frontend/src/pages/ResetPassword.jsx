@@ -5,6 +5,7 @@ import { toast } from '../utils/toast';
 import { authService } from '../services';
 import { Key, ShieldCheck } from 'lucide-react';
 import { Input, Button } from '../components/ui';
+import logoImg from '../assets/logo.png';
 
 const ResetPassword = () => {
   const [step, setStep] = useState(1); // 1 = Request, 2 = Verify & Reset
@@ -54,8 +55,8 @@ const ResetPassword = () => {
 
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
         <div className="church-gradient p-6 text-white text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-2 backdrop-blur-md">
-            <Key size={24} strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl mb-2 shadow-lg">
+            <img src={logoImg} alt="Gitwe AMC" className="w-full h-full object-contain p-1" />
           </div>
           <h1 className="text-xl font-bold">{t('resetPasswordBtn')}</h1>
           <p className="text-white/70 text-xs mt-0.5">{t('appName')}</p>
