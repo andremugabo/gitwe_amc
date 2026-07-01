@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const sendEmail = require('../utils/sendEmail');
+const { broadcast } = require('../utils/websocket');
 const { 
   getCourseScheduledTemplate, 
   getElderEnrolledTemplate, 
@@ -86,16 +87,21 @@ const createCourse = async (req, res) => {
 
     // Create notifications in batch
     await Promise.all(
-      targetUsers.map(u => 
-        prisma.notification.create({
+      targetUsers.map(u => {
+        broadcast('NOTIFICATION', {
+          recipientId: u.id,
+          title: 'New Training Scheduled',
+          message: `A new course "${title}" has been scheduled starting on ${startDate || 'TBD'}.`
+        });
+        return prisma.notification.create({
           data: {
             title: 'New Training Scheduled',
             message: `A new course "${title}" has been scheduled starting on ${startDate || 'TBD'}. Please notify and recommend eligible elders.`,
             type: 'SYSTEM',
             recipientId: u.id
           }
-        })
-      )
+        });
+      })
     );
 
     // Send actual emails system-wide to Pastors & Field Secretaries
@@ -221,6 +227,12 @@ const registerElder = async (req, res) => {
     });
 
     // Notify the elder
+    broadcast('NOTIFICATION', {
+      recipientId: elderId,
+      title: 'Enrolled in Training Course',
+      message: `You have been registered for the course. Go to your dashboard to access course materials.`
+    });
+
     await prisma.notification.create({
       data: {
         title: 'Enrolled in Training Course',
@@ -294,16 +306,21 @@ const recommendElder = async (req, res) => {
     const notifyTargets = [...unionAdmins, ...fieldSecs];
 
     await Promise.all(
-      notifyTargets.map(t =>
-        prisma.notification.create({
+      notifyTargets.map(t => {
+        broadcast('NOTIFICATION', {
+          recipientId: t.id,
+          title: 'Training Recommendation',
+          message: `Pastor ${req.user.name} recommended Elder Gasana Silas for the program: "${courseName}".`
+        });
+        return prisma.notification.create({
           data: {
             title: 'Training Recommendation',
             message: `Pastor ${req.user.name} recommended Elder Gasana Silas for the program: "${courseName}".`,
             type: 'SYSTEM',
             recipientId: t.id
           }
-        })
-      )
+        });
+      })
     );
 
     // Send actual email notifications to Field Secretaries and Union Admins
@@ -433,6 +450,12 @@ const issueCertificate = async (req, res) => {
     });
 
     // Notify the elder
+    broadcast('NOTIFICATION', {
+      recipientId: elderId,
+      title: 'Certificate Issued!',
+      message: `Congratulations! Your certificate is now ready for download in your dashboard.`
+    });
+
     await prisma.notification.create({
       data: {
         title: 'Certificate Issued!',

@@ -63,10 +63,16 @@ app.get('/', (req, res) => {
 // Centralized Error Handler Middleware
 app.use(errorHandler);
 
+const http = require('http');
+const { initWebSocket } = require('./utils/websocket');
+
+const server = http.createServer(app);
+initWebSocket(server);
+
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+module.exports = server;

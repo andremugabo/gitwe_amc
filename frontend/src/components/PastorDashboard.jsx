@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context';
+import { useAuth, useWebSocket } from '../context';
 import { trainingService, authService, availabilityService, hierarchyService } from '../services';
 import { 
   Users, 
@@ -17,6 +17,8 @@ import {
 
 const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const { user } = useAuth();
+  const { chatMessages, sendChatMessage } = useWebSocket();
+  const [chatInput, setChatInput] = useState('');
   const [elders, setElders] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -118,7 +120,12 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
       setLoading(false);
     }
   };
-
+  const handleChatSend = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    sendChatMessage(chatInput);
+    setChatInput('');
+  };
   const handleElderRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -386,30 +393,78 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
 
       {/* Tab: Communication Page */}
       {activeTab === 'communication' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
-          <div>
-            <h3 className="font-bold text-slate-800 text-lg">Communication Center</h3>
-            <p className="text-xs text-slate-400 font-medium">Verify system alerts and notification logs sent to elders.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+          {/* Notification logs list */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
+            <div>
+              <h3 className="font-bold text-slate-800 text-base">System Alerts Logs</h3>
+              <p className="text-xs text-slate-400">Past administrative broadcasts log files.</p>
+            </div>
+
+            {notifications.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6 bg-slate-50 rounded-xl">No logs recorded.</p>
+            ) : (
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                {notifications.map(n => (
+                  <div key={n.id} className="p-3 bg-slate-50 border border-slate-200/50 rounded-xl flex items-start gap-2 text-xs">
+                    <Bell size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800">{n.title}</h4>
+                      <p className="text-slate-500 mt-0.5">{n.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {notifications.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No notification logs recorded.</p>
-          ) : (
-            <div className="space-y-3">
-              {notifications.map(n => (
-                <div key={n.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
-                  <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                    <Bell size={16} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-800 text-sm">{n.title}</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">{n.message}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
-                  </div>
-                </div>
-              ))}
+          {/* Real-time Group Chat */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 flex flex-col justify-between h-[450px]">
+            <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Live Staff chatroom</h3>
+                <p className="text-xs text-slate-400">Instant messaging between active conference pastors and staff.</p>
+              </div>
+              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
             </div>
-          )}
+
+            {/* Messages box */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1 text-xs">
+              {chatMessages.length === 0 ? (
+                <p className="text-slate-400 text-center py-10">No messages in chat yet. Start the conversation!</p>
+              ) : (
+                chatMessages.map((msg, i) => (
+                  <div key={i} className={`flex flex-col max-w-[70%] ${msg.senderName === user?.name ? 'ml-auto items-end' : 'items-start'}`}>
+                    <span className="text-[10px] text-slate-400 font-semibold mb-0.5">{msg.senderName}</span>
+                    <div className={`p-3 rounded-2xl ${
+                      msg.senderName === user?.name 
+                        ? 'bg-blue-600 text-white rounded-tr-none' 
+                        : 'bg-slate-100 text-slate-800 rounded-tl-none'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Input form */}
+            <form onSubmit={handleChatSend} className="flex gap-2 border-t border-slate-100 pt-3">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                placeholder="Type a message..."
+                className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all"
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
