@@ -5,13 +5,17 @@ import {
   BookOpen, 
   Award, 
   Download, 
-  AlertCircle,
+  CheckSquare,
   CheckCircle2,
   Share2,
   Percent,
   Copy,
   Check,
-  Bell
+  Bell,
+  FileText,
+  Clock,
+  Send,
+  AlertCircle
 } from 'lucide-react';
 
 const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
@@ -19,6 +23,12 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
   const [attendance, setAttendance] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [materials, setMaterials] = useState([]);
+  
+  // Test states
+  const [tests, setTests] = useState([]);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [activeTest, setActiveTest] = useState(null);
+  const [testAnswers, setTestAnswers] = useState({});
 
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -58,6 +68,10 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
         courseTitle: m.course?.title || 'Unknown Course'
       })));
 
+      // Fetch active tests
+      const { data: testsData } = await trainingService.getTraineeTests();
+      setTests(testsData);
+
       if (activeTab === 'notifications') {
         const { data: nots } = await trainingService.getNotifications();
         setNotifications(nots);
@@ -93,6 +107,44 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const openTest = (test) => {
+    setActiveTest(test);
+    // Parse questions for answer fields
+    const questions = parseQuestions(test.questions);
+    const initialAnswers = {};
+    questions.forEach((_, idx) => { initialAnswers[idx] = ''; });
+    setTestAnswers(initialAnswers);
+    setShowTestModal(true);
+  };
+
+  const parseQuestions = (questionsStr) => {
+    try {
+      const parsed = JSON.parse(questionsStr);
+      if (Array.isArray(parsed)) return parsed;
+      return [{ question: String(questionsStr) }];
+    } catch {
+      // Split by numbered lines like "1. ...", "2. ..." etc.
+      const lines = questionsStr.split(/\n/).filter(l => l.trim());
+      return lines.map(l => ({ question: l.replace(/^\d+\.\s*/, '').trim() }));
+    }
+  };
+
+  const handleTestSubmit = async () => {
+    setLoading(true);
+    try {
+      await trainingService.submitTest(activeTest.id, { answers: JSON.stringify(testAnswers) });
+      toast.success('Test submitted successfully! Your trainer will grade it.');
+      setShowTestModal(false);
+      setActiveTest(null);
+      setTestAnswers({});
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit test.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -329,6 +381,105 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
         </div>
       )}
 
+      {/* Tab: My Tests */}
+      {activeTab === 'tests' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 text-left">
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg">My Course Tests</h3>
+            <p className="text-xs text-slate-400">View tests assigned to your enrolled courses. Submit your answers for trainer evaluation.</p>
+          </div>
+
+          {tests.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl space-y-3">
+              <FileText size={32} className="text-slate-300 mx-auto" />
+              <p className="text-sm text-slate-400">No tests available yet for your courses.</p>
+              <p className="text-xs text-slate-300">Tests will appear here once your trainer prepares them.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tests.map(test => {
+                const submission = test.results && test.results.length > 0 ? test.results[0] : null;
+                const isPending = submission?.status === 'PENDING';
+                const isGraded = submission?.status === 'PASSED' || submission?.status === 'FAILED';
+                const hasSubmitted = !!submission;
+
+                return (
+                  <div key={test.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-1">
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] uppercase font-bold">
+                          {test.course?.title || 'Course'}
+                        </span>
+                        <h4 className="font-bold text-slate-800 text-sm mt-1">{test.title}</h4>
+                        <p className="text-[10px] text-slate-400">Created: {new Date(test.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!hasSubmitted && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg text-[10px] font-bold">
+                            <Clock size={12} /> Not Submitted
+                          </span>
+                        )}
+                        {isPending && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-[10px] font-bold">
+                            <Clock size={12} /> Awaiting Grade
+                          </span>
+                        )}
+                        {isGraded && (
+                          <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                            submission.status === 'PASSED'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : 'bg-red-50 text-red-700 border border-red-100'
+                          }`}>
+                            {submission.status === 'PASSED' ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                            {submission.status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Graded Results */}
+                    {isGraded && (
+                      <div className="p-4 bg-white border border-slate-200/50 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-600">Score:</span>
+                          <span className={`text-lg font-bold ${
+                            submission.score >= 50 ? 'text-emerald-600' : 'text-red-600'
+                          }`}>{submission.score} / 100</span>
+                        </div>
+                        {/* Score bar */}
+                        <div className="w-full bg-slate-100 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              submission.score >= 50 ? 'bg-emerald-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(submission.score, 100)}%` }}
+                          />
+                        </div>
+                        {submission.feedback && (
+                          <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-xl text-xs text-slate-600 mt-2">
+                            <strong>Trainer Feedback:</strong> "{submission.feedback}"
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Take Test Button */}
+                    {!hasSubmitted && (
+                      <button
+                        onClick={() => openTest(test)}
+                        className="flex items-center gap-2 px-4 py-2.5 church-gradient text-white font-bold rounded-xl text-xs transition-all shadow-md hover:shadow-lg"
+                      >
+                        <FileText size={14} /> Open & Take Test
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* MODAL: Certificate Preview with visual QR code */}
       {activeCert && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
@@ -394,6 +545,60 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
                   <span>{copied ? 'Copied Link!' : 'Share Certificate'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL: Test Taking */}
+      {showTestModal && activeTest && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden text-left max-h-[90vh] flex flex-col">
+            <div className="church-gradient px-6 py-4 text-white flex justify-between items-center shrink-0">
+              <div>
+                <h3 className="font-bold text-base">{activeTest.title}</h3>
+                <p className="text-xs text-white/70">{activeTest.course?.title}</p>
+              </div>
+              <button onClick={() => { setShowTestModal(false); setActiveTest(null); setTestAnswers({}); }} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
+                <AlertCircle size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-blue-800">Instructions</p>
+                  <p className="text-xs text-blue-600">Read each question carefully and write your answer in the text field below it. Once submitted, you cannot modify your answers. Your trainer will review and grade your submission.</p>
+                </div>
+              </div>
+
+              {parseQuestions(activeTest.questions).map((q, idx) => (
+                <div key={idx} className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-start gap-2">
+                    <span className="w-6 h-6 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs font-bold shrink-0">{idx + 1}</span>
+                    <span>{typeof q === 'string' ? q : q.question || q}</span>
+                  </label>
+                  <textarea
+                    value={testAnswers[idx] || ''}
+                    onChange={(e) => setTestAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
+                    placeholder="Type your answer here..."
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all min-h-[80px] resize-y"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex justify-between items-center shrink-0">
+              <p className="text-[10px] text-slate-400">All answers are final once submitted.</p>
+              <button
+                onClick={handleTestSubmit}
+                disabled={loading || Object.values(testAnswers).every(a => !a.trim())}
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs transition-all shadow-md"
+              >
+                {loading ? (
+                  <><Clock size={14} className="animate-spin" /> Submitting...</>
+                ) : (
+                  <><Send size={14} /> Submit Test Answers</>
+                )}
+              </button>
             </div>
           </div>
         </div>

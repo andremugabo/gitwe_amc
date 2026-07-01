@@ -56,6 +56,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     ELDER: [
       { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
       { id: 'materials', name: 'My Materials', icon: BookOpen },
+      { id: 'tests', name: 'My Tests', icon: ClipboardList },
       { id: 'certificates', name: 'My Certificate', icon: Award },
       { id: 'evaluation', name: 'Evaluation', icon: Percent },
       { id: 'notifications', name: 'Notifications', icon: Bell }
@@ -76,8 +77,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     <div className="w-64 bg-slate-900 text-slate-300 min-h-screen flex flex-col justify-between border-r border-slate-800 shrink-0">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-            G
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-white flex items-center justify-center shadow">
+            <img src="/favicon.png" alt="Gitwe AMC Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h2 className="font-bold text-white text-sm tracking-wide">GITWE AMC</h2>

@@ -32,6 +32,10 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
   const [testForm, setTestForm] = useState({ title: '', questions: '', courseId: '' });
   const [testResults, setTestResults] = useState([]);
   
+  // Grading state
+  const [gradingId, setGradingId] = useState(null);
+  const [gradeForm, setGradeForm] = useState({ score: '', feedback: '' });
+
   // Evaluation state
   const [evaluations, setEvaluations] = useState([]);
 
@@ -350,7 +354,7 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
                   required
                   value={testForm.questions}
                   onChange={e => setTestForm({ ...testForm, questions: e.target.value })}
-                  placeholder="1. Define Hermeneutics...\n2. What is the scope of pastoral care?"
+                  placeholder={"1. Define Hermeneutics...\n2. What is the scope of pastoral care?"}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm h-32 focus:outline-none"
                 />
               </div>
@@ -365,43 +369,139 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
             </form>
           </div>
 
-          {/* Test results submission overview */}
+          {/* Test results & grading panel */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 lg:col-span-2 space-y-6">
             <div>
-              <h3 className="font-bold text-slate-800 text-lg">Trainee Test Scores</h3>
-              <p className="text-xs text-slate-400">Review evaluation results and scores submitted by course elders.</p>
+              <h3 className="font-bold text-slate-800 text-lg">Trainee Submissions & Grading</h3>
+              <p className="text-xs text-slate-400">Review test submissions, view answers, assign scores and provide feedback.</p>
             </div>
 
             {testResults.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No test results submitted yet.</p>
+              <p className="text-sm text-slate-400 text-center py-10 bg-slate-50 rounded-2xl">No test submissions yet.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
-                      <th className="py-2.5 px-3">Elders</th>
-                      <th className="py-2.5 px-3">Test Paper</th>
-                      <th className="py-2.5 px-3">Graded Score</th>
-                      <th className="py-2.5 px-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 text-sm">
-                    {testResults.map(res => (
-                      <tr key={res.id}>
-                        <td className="py-3 px-3 font-semibold text-slate-800">{res.elder.name}</td>
-                        <td className="py-3 px-3 text-slate-500">{res.test.title}</td>
-                        <td className="py-3 px-3 font-bold text-slate-800">{res.score} / 100</td>
-                        <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            res.status === 'PASSED' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                          }`}>
-                            {res.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-4">
+                {testResults.map(res => {
+                  const isPending = res.status === 'PENDING';
+                  const isGraded = res.status === 'PASSED' || res.status === 'FAILED';
+                  const isGrading = gradingId === res.id;
+
+                  return (
+                    <div key={res.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="space-y-0.5">
+                          <h4 className="font-bold text-slate-800 text-sm">Elder {res.elder.name}</h4>
+                          <p className="text-xs text-slate-400">{res.test.title} &middot; {res.elder.email}</p>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                          isPending ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          res.status === 'PASSED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          'bg-red-50 text-red-700 border border-red-100'
+                        }`}>
+                          {res.status}
+                        </span>
+                      </div>
+
+                      {/* View submitted answers */}
+                      {res.answers && (
+                        <details className="group">
+                          <summary className="text-xs font-bold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
+                            View Submitted Answers ▾
+                          </summary>
+                          <div className="mt-2 p-4 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 space-y-2 whitespace-pre-wrap">
+                            {(() => {
+                              try {
+                                const parsed = JSON.parse(res.answers);
+                                if (typeof parsed === 'object') {
+                                  return Object.entries(parsed).map(([key, val]) => (
+                                    <div key={key} className="space-y-0.5">
+                                      <p className="font-bold text-slate-700">Question {parseInt(key) + 1}:</p>
+                                      <p className="pl-3 text-slate-600">{val || <em className="text-slate-300">No answer provided</em>}</p>
+                                    </div>
+                                  ));
+                                }
+                                return <p>{String(parsed)}</p>;
+                              } catch {
+                                return <p>{res.answers}</p>;
+                              }
+                            })()}
+                          </div>
+                        </details>
+                      )}
+
+                      {/* Graded result display */}
+                      {isGraded && !isGrading && (
+                        <div className="flex items-center justify-between p-3 bg-white border border-slate-200/50 rounded-xl">
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs font-bold text-slate-500">Score:</span>
+                            <span className={`text-lg font-bold ${res.score >= 50 ? 'text-emerald-600' : 'text-red-600'}`}>{res.score} / 100</span>
+                          </div>
+                          <button
+                            onClick={() => { setGradingId(res.id); setGradeForm({ score: res.score || '', feedback: res.feedback || '' }); }}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition-all"
+                          >
+                            Re-grade
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Grading form */}
+                      {(isPending || isGrading) && (
+                        <div className="p-4 bg-white border border-blue-100 rounded-xl space-y-3">
+                          <p className="text-xs font-bold text-blue-700">Grade This Submission</p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Score (out of 100)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={isGrading ? gradeForm.score : (gradingId === null && isPending ? gradeForm.score : '')}
+                                onChange={e => { if (!isGrading && isPending) setGradingId(res.id); setGradeForm(prev => ({ ...prev, score: e.target.value })); }}
+                                onFocus={() => { if (gradingId !== res.id) { setGradingId(res.id); setGradeForm({ score: '', feedback: '' }); } }}
+                                placeholder="75"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Feedback (optional)</label>
+                              <input
+                                type="text"
+                                value={isGrading ? gradeForm.feedback : ''}
+                                onChange={e => setGradeForm(prev => ({ ...prev, feedback: e.target.value }))}
+                                onFocus={() => { if (gradingId !== res.id) { setGradingId(res.id); setGradeForm({ score: '', feedback: '' }); } }}
+                                placeholder="Great work on question 2..."
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                              />
+                            </div>
+                          </div>
+                          {gradingId === res.id && (
+                            <button
+                              onClick={async () => {
+                                if (!gradeForm.score) { toast.error('Please enter a score.'); return; }
+                                setLoading(true);
+                                try {
+                                  await trainerService.gradeTestResult(res.id, gradeForm);
+                                  toast.success(`Elder ${res.elder.name} scored ${gradeForm.score}/100 — ${parseInt(gradeForm.score) >= 50 ? 'PASSED ✓' : 'FAILED ✗'}`);
+                                  setGradingId(null);
+                                  setGradeForm({ score: '', feedback: '' });
+                                  fetchData();
+                                } catch (err) {
+                                  toast.error(err.response?.data?.message || 'Failed to grade test.');
+                                } finally {
+                                  setLoading(false);
+                                }
+                              }}
+                              disabled={loading || !gradeForm.score}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs transition-all shadow-sm"
+                            >
+                              {loading ? 'Saving...' : 'Save Grade & Submit'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

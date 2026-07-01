@@ -47,6 +47,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const [notifications, setNotifications] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
+  const [elders, setElders] = useState([]);
   
   // Forms states
   const [showCourseForm, setShowCourseForm] = useState(false);
@@ -64,6 +65,13 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
 
   const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: 'General' });
   const [showFaqForm, setShowFaqForm] = useState(false);
+
+  // Enrollment form
+  const [showEnrollForm, setShowEnrollForm] = useState(false);
+  const [enrollForm, setEnrollForm] = useState({ courseId: '', elderId: '' });
+
+  // Course selection for recommendation approval
+  const [recCourseMap, setRecCourseMap] = useState({});
 
   const [hierarchy, setHierarchy] = useState({ fields: [], districts: [], localChurches: [] });
 
@@ -100,8 +108,14 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
         setUsers(data);
       }
       if (activeTab === 'registrations') {
-        const { data } = await trainingService.getRecommendations();
-        setRecommendations(data);
+        const [recsRes, coursesRes, eldersRes] = await Promise.all([
+          trainingService.getRecommendations(),
+          trainingService.getCourses(),
+          authService.getUsers({ role: 'ELDER' })
+        ]);
+        setRecommendations(recsRes.data);
+        setCourses(coursesRes.data);
+        setElders(eldersRes.data);
       }
       if (activeTab === 'notifications') {
         const { data } = await trainingService.getNotifications();
@@ -492,9 +506,17 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
       {/* Tab: Registrations (recommendations & active approvals) */}
       {activeTab === 'registrations' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
-          <div>
-            <h3 className="font-bold text-slate-800 text-lg">Elder Registrations & Approvals</h3>
-            <p className="text-xs text-slate-400">Process and approve pastoral registration recommendations for training programs.</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg">Elder Registrations & Approvals</h3>
+              <p className="text-xs text-slate-400">Process and approve pastoral registration recommendations for training programs.</p>
+            </div>
+            <button
+              onClick={() => setShowEnrollForm(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+            >
+              <Plus size={14} /> Assign Trainee to Course
+            </button>
           </div>
 
           {recommendations.length === 0 ? (
@@ -502,32 +524,122 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
           ) : (
             <div className="space-y-4">
               {recommendations.map(r => (
-                <div key={r.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-1">
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] uppercase font-bold">
-                      {r.courseName}
-                    </span>
-                    <h4 className="font-bold text-slate-800 text-sm">Trainee Name: Elder {r.elder?.name}</h4>
-                    <p className="text-xs text-slate-500">Supervised by: Pastor {r.pastor?.name} | Recommendation comments: "{r.notes || 'None'}"</p>
+                <div key={r.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="space-y-1">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] uppercase font-bold">
+                        {r.courseName}
+                      </span>
+                      <h4 className="font-bold text-slate-800 text-sm">Trainee Name: Elder {r.elder?.name}</h4>
+                      <p className="text-xs text-slate-500">Supervised by: Pastor {r.pastor?.name} | Recommendation comments: "{r.notes || 'None'}"</p>
+                    </div>
                   </div>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await trainingService.registerElder({ courseId: courses[0]?.id || '', elderId: r.elderId });
-                        toast.success('Elder registration approved and registered successfully!');
-                        fetchData();
-                      } catch (err) {
-                        toast.error('Please ensure you have scheduled training sessions before registering.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm"
-                  >
-                    Approve Registration
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+                    <div className="space-y-1 flex-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Assign to Course</label>
+                      <select
+                        value={recCourseMap[r.id] || ''}
+                        onChange={e => setRecCourseMap(prev => ({ ...prev, [r.id]: e.target.value }))}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm"
+                      >
+                        <option value="">-- Select Course --</option>
+                        {courses.map(c => (
+                          <option key={c.id} value={c.id}>{c.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const selectedCourseId = recCourseMap[r.id];
+                        if (!selectedCourseId) {
+                          toast.error('Please select a course before approving.');
+                          return;
+                        }
+                        try {
+                          await trainingService.registerElder({ courseId: selectedCourseId, elderId: r.elderId });
+                          toast.success('Elder registration approved and registered successfully!');
+                          fetchData();
+                          refreshStats();
+                        } catch (err) {
+                          toast.error(err.response?.data?.message || 'Please ensure you have scheduled training sessions before registering.');
+                        }
+                      }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm whitespace-nowrap"
+                    >
+                      Approve & Register
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* MODAL: Assign Trainee to Course */}
+      {showEnrollForm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden text-left">
+            <div className="church-gradient px-6 py-4 text-white flex justify-between items-center">
+              <h3 className="font-bold text-base">Assign Trainee to Course</h3>
+              <button onClick={() => setShowEnrollForm(false)} className="text-white hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Select Elder (Trainee)</label>
+                <select
+                  required
+                  value={enrollForm.elderId}
+                  onChange={e => setEnrollForm(prev => ({ ...prev, elderId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                >
+                  <option value="">-- Choose Elder --</option>
+                  {elders.map(e => (
+                    <option key={e.id} value={e.id}>{e.name} ({e.email})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Select Course</label>
+                <select
+                  required
+                  value={enrollForm.courseId}
+                  onChange={e => setEnrollForm(prev => ({ ...prev, courseId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                >
+                  <option value="">-- Choose Course --</option>
+                  {courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!enrollForm.courseId || !enrollForm.elderId) {
+                    toast.error('Please select both an elder and a course.');
+                    return;
+                  }
+                  setLoading(true);
+                  try {
+                    await trainingService.registerElder(enrollForm);
+                    toast.success('Elder enrolled to course successfully!');
+                    setShowEnrollForm(false);
+                    setEnrollForm({ courseId: '', elderId: '' });
+                    fetchData();
+                    refreshStats();
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || 'Enrollment failed.');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="w-full py-2.5 px-4 church-gradient text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
+              >
+                {loading ? 'Enrolling...' : 'Enroll Elder'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
