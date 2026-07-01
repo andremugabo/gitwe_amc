@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useAuth, useLanguage } from '../context';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button, Input } from '../components/ui';
+import { toast } from '../utils/toast';
 import { Church, Lock, Mail, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isUnverified, setIsUnverified] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
@@ -19,13 +19,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setIsUnverified(false);
     
     const result = await login(email, password);
     if (result.success) {
       navigate('/dashboard');
     } else {
-      setError(result.message);
+      toast.error(result.message);
       if (result.unverified) {
         setIsUnverified(true);
         setUnverifiedEmail(result.email || email);
@@ -51,22 +51,20 @@ const Login = () => {
 
         <div className="p-8 bg-white">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="space-y-2 p-3 text-sm text-red-600 bg-red-50 rounded-lg animate-in slide-in-from-top-1 duration-300">
+            {isUnverified && (
+              <div className="space-y-2 p-3 text-sm text-amber-800 bg-amber-50 rounded-lg animate-in slide-in-from-top-1 duration-300">
                 <div className="flex items-center gap-2">
-                  <AlertCircle size={18} className="shrink-0" />
-                  <span>{error}</span>
+                  <AlertCircle size={18} className="shrink-0 text-amber-600" />
+                  <span className="font-bold">Verification Required</span>
                 </div>
-                {isUnverified && (
-                  <div className="pt-1.5 border-t border-red-200/50">
-                    <Link
-                      to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
-                      className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
-                    >
-                      Click here to enter your verification code and activate your account &rarr;
-                    </Link>
-                  </div>
-                )}
+                <div className="pt-1.5 border-t border-amber-200/50">
+                  <Link
+                    to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
+                    className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
+                  >
+                    Click here to enter your verification code and activate your account &rarr;
+                  </Link>
+                </div>
               </div>
             )}
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from '../utils/toast';
 import { trainingService, evaluationService } from '../services';
 import { 
   BookOpen, 
@@ -19,8 +20,6 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
   const [notifications, setNotifications] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -71,21 +70,19 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleEvalSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
 
     if (!evalForm.courseId) {
-      setError('Please select a course to evaluate.');
+      toast.error('Please select a course to evaluate.');
       setLoading(false);
       return;
     }
 
     try {
       await evaluationService.submitEvaluation(evalForm);
-      setMessage('Thank you! Your training evaluation feedback has been submitted successfully.');
+      toast.success('Thank you! Your training evaluation feedback has been submitted successfully.');
       setEvalForm({ courseId: '', contentRating: 5, teacherRating: 5, materialsRating: 5, comments: '' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit evaluation.');
+      toast.error(err.response?.data?.message || 'Failed to submit evaluation.');
     } finally {
       setLoading(false);
     }
@@ -100,18 +97,6 @@ const ElderDashboard = ({ activeTab, stats, refreshStats }) => {
 
   return (
     <div className="space-y-8">
-      {message && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 size={18} />
-          <span>{message}</span>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Tab: Dashboard stats */}
       {activeTab === 'dashboard' && stats && (

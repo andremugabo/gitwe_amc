@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context';
+import { toast } from '../utils/toast';
 import { trainingService, hierarchyService, authService, faqService, evaluationService, settingsService } from '../services';
 import { 
   ResponsiveContainer, 
@@ -66,8 +67,6 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const [hierarchy, setHierarchy] = useState({ fields: [], districts: [], localChurches: [] });
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   // Settings state loaded from DB
   const [settings, setSettings] = useState({
@@ -142,17 +141,15 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleCourseSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await trainingService.createCourse(courseForm);
-      setMessage('Training program scheduled and system notifications sent successfully!');
+      toast.success('Training program scheduled and system notifications sent successfully!');
       setCourseForm({ title: '', description: '', topics: '', location: '', duration: '', startDate: '', endDate: '' });
       setShowCourseForm(false);
       fetchData();
       refreshStats();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create course');
+      toast.error(err.response?.data?.message || 'Failed to create course');
     } finally {
       setLoading(false);
     }
@@ -161,8 +158,6 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleUserSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       if (editingUserId) {
         const updateData = { ...userForm };
@@ -170,10 +165,10 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
           delete updateData.password;
         }
         await authService.updateUser(editingUserId, updateData);
-        setMessage('Leader account details updated successfully!');
+        toast.success('Leader account details updated successfully!');
       } else {
         await authService.register({ ...userForm, isVerified: true });
-        setMessage('Leader account registered successfully!');
+        toast.success('Leader account registered successfully!');
       }
       setUserForm({
         name: '', email: '', password: '', role: 'FIELD_SECRETARY', phone: '',
@@ -185,7 +180,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
       fetchData();
       refreshStats();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit account changes');
+      toast.error(err.response?.data?.message || 'Failed to submit account changes');
     } finally {
       setLoading(false);
     }
@@ -194,16 +189,14 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleFaqSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await faqService.createFaq(faqForm);
-      setMessage('FAQ added successfully!');
+      toast.success('FAQ added successfully!');
       setFaqForm({ question: '', answer: '', category: 'General' });
       setShowFaqForm(false);
       fetchData();
     } catch (err) {
-      setError('Failed to create FAQ');
+      toast.error('Failed to create FAQ');
     } finally {
       setLoading(false);
     }
@@ -213,23 +206,21 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     if (!confirm('Are you sure you want to delete this FAQ?')) return;
     try {
       await faqService.deleteFaq(id);
-      setMessage('FAQ deleted successfully!');
+      toast.success('FAQ deleted successfully!');
       fetchData();
     } catch (err) {
-      setError('Failed to delete FAQ');
+      toast.error('Failed to delete FAQ');
     }
   };
 
   const handleSettingsSave = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await settingsService.updateSettings(settings);
-      setMessage('Admin settings updated successfully!');
+      toast.success('Admin settings updated successfully!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update system configurations.');
+      toast.error(err.response?.data?.message || 'Failed to update system configurations.');
     } finally {
       setLoading(false);
     }
@@ -241,7 +232,7 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
       setCourseMaterialsList(data.materials || []);
     } catch (err) {
       console.error(err);
-      setError('Failed to load course materials.');
+      toast.error('Failed to load course materials.');
     }
   };
 
@@ -249,15 +240,13 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
     e.preventDefault();
     if (!selectedCourseForMaterials) return;
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await trainingService.addCourseMaterial(selectedCourseForMaterials.id, materialForm);
       setMaterialForm({ title: '', fileUrl: '', fileType: 'PDF' });
       fetchCourseMaterials(selectedCourseForMaterials.id);
-      setMessage('Course material uploaded successfully!');
+      toast.success('Course material uploaded successfully!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to upload material');
+      toast.error(err.response?.data?.message || 'Failed to upload material');
     } finally {
       setLoading(false);
     }
@@ -269,19 +258,6 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
 
   return (
     <div className="space-y-8">
-      {/* Messages */}
-      {message && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 size={18} />
-          <span>{message}</span>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Tab: Dashboard stats */}
       {activeTab === 'dashboard' && stats && (
@@ -537,10 +513,10 @@ const UnionAdminDashboard = ({ activeTab, stats, refreshStats }) => {
                     onClick={async () => {
                       try {
                         await trainingService.registerElder({ courseId: courses[0]?.id || '', elderId: r.elderId });
-                        setMessage('Elder registration approved and registered successfully!');
+                        toast.success('Elder registration approved and registered successfully!');
                         fetchData();
                       } catch (err) {
-                        setError('Please ensure you have scheduled training sessions before registering.');
+                        toast.error('Please ensure you have scheduled training sessions before registering.');
                       }
                     }}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm"

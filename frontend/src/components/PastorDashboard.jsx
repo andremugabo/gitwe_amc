@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useWebSocket } from '../context';
+import { toast } from '../utils/toast';
 import { trainingService, authService, availabilityService, hierarchyService } from '../services';
 import { 
   Users, 
@@ -43,8 +44,6 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -87,17 +86,14 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleRecommend = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
-
     try {
       await trainingService.recommendElder(recForm);
-      setMessage('Elder recommended successfully! Field Secretary has been notified.');
+      toast.success('Elder recommended successfully! Field Secretary has been notified.');
       setRecForm({ courseName: '', elderId: '', notes: '' });
       setShowRecForm(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Recommendation failed');
+      toast.error(err.response?.data?.message || 'Recommendation failed');
     } finally {
       setLoading(false);
     }
@@ -106,16 +102,14 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleAvailSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await availabilityService.setAvailability(availForm);
-      setMessage('Availability calendar record logged successfully!');
+      toast.success('Availability calendar record logged successfully!');
       setAvailForm({ date: '', status: 'AVAILABLE', notes: '' });
       setShowAvailForm(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to log availability');
+      toast.error(err.response?.data?.message || 'Failed to log availability');
     } finally {
       setLoading(false);
     }
@@ -129,8 +123,6 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleElderRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await authService.register({
         ...registerForm,
@@ -138,12 +130,12 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
         districtId: user?.districtId,
         isVerified: true
       });
-      setMessage('Elder registered successfully!');
+      toast.success('Elder registered successfully!');
       setRegisterForm({ name: '', email: '', password: '', phone: '', localChurchId: '' });
       setShowRegisterForm(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register elder');
+      toast.error(err.response?.data?.message || 'Failed to register elder');
     } finally {
       setLoading(false);
     }
@@ -151,18 +143,6 @@ const PastorDashboard = ({ activeTab, stats, refreshStats }) => {
 
   return (
     <div className="space-y-8">
-      {message && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 size={18} />
-          <span>{message}</span>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Tab: Dashboard stats */}
       {activeTab === 'dashboard' && stats && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
+import { toast } from '../utils/toast';
 import { trainerService } from '../services';
 import { 
   Users, 
@@ -35,8 +36,6 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
   const [evaluations, setEvaluations] = useState([]);
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -80,8 +79,6 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleAttendanceSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
 
     const records = Object.keys(attendanceMap).map(elderId => ({
       elderId,
@@ -94,9 +91,9 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
         sessionId: attendanceSessionId,
         attendanceRecords: records
       });
-      setMessage('Attendance logs marked and saved successfully!');
+      toast.success('Attendance logs marked and saved successfully!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save attendance.');
+      toast.error(err.response?.data?.message || 'Failed to save attendance.');
     } finally {
       setLoading(false);
     }
@@ -105,16 +102,14 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleTestSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
 
     try {
       await trainerService.createTest(testForm);
-      setMessage('Test paper prepared and registered successfully!');
+      toast.success('Test paper prepared and registered successfully!');
       setTestForm({ title: '', questions: '', courseId: '' });
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register test.');
+      toast.error(err.response?.data?.message || 'Failed to register test.');
     } finally {
       setLoading(false);
     }
@@ -129,18 +124,6 @@ const TrainerDashboard = ({ activeTab, stats, refreshStats }) => {
 
   return (
     <div className="space-y-8">
-      {message && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 size={18} />
-          <span>{message}</span>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Tab: Dashboard stats */}
       {activeTab === 'dashboard' && (

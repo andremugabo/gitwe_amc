@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../context';
+import { toast } from '../utils/toast';
 import { trainingService, memberService, authService } from '../services';
 import { 
   Users, 
@@ -34,8 +36,6 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
   const [showSessionForm, setShowSessionForm] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   // Selected session for attendance
   const [selectedSession, setSelectedSession] = useState(null);
@@ -67,17 +67,15 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
   const handleEnroll = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       await trainingService.registerElder(registerForm);
-      setMessage('Elder registered for course successfully!');
+      toast.success('Elder registered for course successfully!');
       setRegisterForm({ courseId: '', elderId: '' });
       setShowRegisterForm(false);
       fetchData();
       refreshStats();
     } catch (err) {
-      setError(err.response?.data?.message || 'Enrollment failed');
+      toast.error(err.response?.data?.message || 'Enrollment failed');
     } finally {
       setLoading(false);
     }
@@ -88,7 +86,7 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
     setLoading(true);
     try {
       await trainingService.createSession(activeCourse.id, sessionForm);
-      setMessage('Class session created!');
+      toast.success('Class session created!');
       setSessionForm({ date: '', topic: '' });
       setShowSessionForm(false);
       
@@ -97,7 +95,7 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
       setActiveCourse(data);
       setSessions(data.sessions);
     } catch (err) {
-      setError('Failed to create session');
+      toast.error('Failed to create session');
     } finally {
       setLoading(false);
     }
@@ -140,10 +138,10 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
       await trainingService.markAttendance(selectedSession.id, {
         attendance: attendanceSheet.map(item => ({ elderId: item.elderId, isPresent: item.isPresent }))
       });
-      setMessage('Attendance sheet updated successfully!');
+      toast.success('Attendance sheet updated successfully!');
       loadCourseDetails(activeCourse.id);
     } catch (err) {
-      setError('Failed to save attendance');
+      toast.error('Failed to save attendance');
     } finally {
       setLoading(false);
     }
@@ -151,18 +149,6 @@ const FieldSecretaryDashboard = ({ activeTab, stats, refreshStats }) => {
 
   return (
     <div className="space-y-8">
-      {message && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 size={18} />
-          <span>{message}</span>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Tab: Dashboard stats */}
       {activeTab === 'dashboard' && stats && (
