@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context';
+import { toast } from '../utils/toast';
 import { authService, hierarchyService } from '../services';
 import { Church, CheckCircle } from 'lucide-react';
 
@@ -26,7 +27,6 @@ const Register = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [verifiedEmail, setVerifiedEmail] = useState('');
 
@@ -64,26 +64,25 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     // Pre-validation to match scopes
     if (formData.role === 'UNION_ADMIN' && !formData.unionId) {
-      setError('Please select a Union');
+      toast.error('Please select a Union');
       setLoading(false);
       return;
     }
     if (formData.role === 'FIELD_SECRETARY' && !formData.fieldId) {
-      setError('Please select a Field');
+      toast.error('Please select a Field');
       setLoading(false);
       return;
     }
     if (formData.role === 'PASTOR' && !formData.districtId) {
-      setError('Please select a District');
+      toast.error('Please select a District');
       setLoading(false);
       return;
     }
     if (formData.role === 'ELDER' && !formData.localChurchId) {
-      setError('Please select a Local Church');
+      toast.error('Please select a Local Church');
       setLoading(false);
       return;
     }
@@ -93,7 +92,7 @@ const Register = () => {
       setVerifiedEmail(data.email);
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -102,13 +101,12 @@ const Register = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       await authService.verifyEmail(verifiedEmail, otpCode);
       setStep(3); // Success Screen
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid verification code');
+      toast.error(err.response?.data?.message || 'Invalid verification code');
     } finally {
       setLoading(false);
     }
@@ -135,11 +133,6 @@ const Register = () => {
         </div>
 
         <div className="p-8">
-          {error && (
-            <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg">
-              {error}
-            </div>
-          )}
 
           {step === 1 && (
             <form onSubmit={handleRegister} className="space-y-4">

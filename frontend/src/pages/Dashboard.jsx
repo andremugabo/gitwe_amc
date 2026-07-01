@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
+import { toast } from '../utils/toast';
 import { Sidebar, Header, UnionAdminDashboard, FieldSecretaryDashboard, PastorDashboard, ElderDashboard, TrainerDashboard } from '../components';
 import { dashboardService } from '../services';
 import { Loader2 } from 'lucide-react';
@@ -9,7 +10,6 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const fetchStats = async () => {
     try {
@@ -17,7 +17,7 @@ const Dashboard = () => {
       const { data } = await dashboardService.getStats();
       setStats(data);
     } catch (err) {
-      setError('Failed to fetch dashboard metrics');
+      toast.error('Failed to fetch dashboard metrics');
       console.error(err);
     } finally {
       setLoading(false);
@@ -52,11 +52,6 @@ const Dashboard = () => {
         <Header title={getHeaderTitle()} />
 
         <main className="p-8 flex-1">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold">
-              {error}
-            </div>
-          )}
 
           {/* Scoped Dashboard Sub-Components */}
           {user.role === 'UNION_ADMIN' && (

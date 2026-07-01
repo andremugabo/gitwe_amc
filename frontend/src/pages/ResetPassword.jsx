@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context';
+import { toast } from '../utils/toast';
 import { authService } from '../services';
 import { Key, ShieldCheck } from 'lucide-react';
 import { Input, Button } from '../components/ui';
@@ -11,8 +12,6 @@ const ResetPassword = () => {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -20,15 +19,13 @@ const ResetPassword = () => {
   const handleRequest = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
 
     try {
       const { data } = await authService.forgotPassword(email);
-      setMessage(data.message);
+      toast.info(data.message);
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to request reset code');
+      toast.error(err.response?.data?.message || 'Failed to request reset code');
     } finally {
       setLoading(false);
     }
@@ -37,14 +34,13 @@ const ResetPassword = () => {
   const handleReset = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const { data } = await authService.resetPassword(email, code, newPassword);
-      setMessage(data.message);
+      toast.success(data.message);
       setStep(3); // Success state
     } catch (err) {
-      setError(err.response?.data?.message || 'Password reset failed');
+      toast.error(err.response?.data?.message || 'Password reset failed');
     } finally {
       setLoading(false);
     }
@@ -66,17 +62,6 @@ const ResetPassword = () => {
         </div>
 
         <div className="p-8">
-          {error && (
-            <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          {message && step !== 3 && (
-            <div className="mb-4 p-3 text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-lg">
-              {message}
-            </div>
-          )}
 
           {step === 1 && (
             <form onSubmit={handleRequest} className="space-y-4">

@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useLanguage } from '../context';
+import { toast } from '../utils/toast';
 import { authService } from '../services';
 import { Input, Button } from '../components/ui';
-import { Church, CheckCircle, Mail, AlertCircle } from 'lucide-react';
+import { Church, CheckCircle, Mail } from 'lucide-react';
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
@@ -26,13 +26,12 @@ const VerifyEmail = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       await authService.verifyEmail(email, code);
       setSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid verification code');
+      toast.error(err.response?.data?.message || 'Invalid verification code');
     } finally {
       setLoading(false);
     }
@@ -54,12 +53,6 @@ const VerifyEmail = () => {
         </div>
 
         <div className="p-8 text-center">
-          {error && (
-            <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-left">
-              <AlertCircle size={18} className="shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
 
           {!success ? (
             <form onSubmit={handleVerify} className="space-y-5 text-left">
