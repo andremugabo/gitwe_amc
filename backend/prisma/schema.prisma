@@ -320,9 +320,14 @@ model TestResult {
   test      Test     @relation(fields: [testId], references: [id])
   elderId   String
   elder     User     @relation(fields: [elderId], references: [id])
-  score     Int
-  status    String   // "PASSED", "FAILED"
+  answers   String?
+  score     Int?
+  status    String   @default("PENDING")
+  feedback  String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([testId, elderId])
 }
 
 model Setting {
